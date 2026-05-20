@@ -4,88 +4,39 @@
 # To learn more about testing, see https://documentation.ubuntu.com/ops/latest/explanation/testing/
 
 import pytest
-from ops import pebble, testing
+from ops import testing
 
-from charm import SERVICE_NAME, RequestAuthenticationIntegratorCharm
+from charm import RequestAuthenticationIntegratorCharm
 
-CHECK_NAME = "service-ready"  # Name of Pebble check in the mock workload container.
 
-layer = pebble.Layer(
-    {
-        "services": {
-            SERVICE_NAME: {
-                "override": "replace",
-                "command": "/bin/foo",  # The specific command isn't important for unit tests.
-                "startup": "enabled",
-            }
-        },
-        "checks": {
-            CHECK_NAME: {
-                "override": "replace",
-                "level": "ready",
-                "threshold": 3,
-                "startup": "enabled",
-                "http": {
-                    "url": "http://localhost:8000/version",  # The specific URL isn't important.
-                },
-            }
-        },
-    }
+CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
+
+
+def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
+    """Compose the charm configs given the user ID header name."""
+    return {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: user_id_header_name}
+
+
+@pytest.mark.parametrize(
+    "new_configs, is_expected_to_be_valid",
+    [
+        (compose_charm_configs("kubeflow-userid"), True),
+        (compose_charm_configs(""), False),
+        (compose_charm_configs("mlflow-userid"), True),
+    ]
 )
-
-
-def mock_get_version():
-    """Get a mock version string without executing the workload code."""
-    return "1.0.0"
-
-
-def test_pebble_ready(monkeypatch: pytest.MonkeyPatch):
-    """Test that the charm has the correct state after handling the pebble-ready event."""
+def test_unit_status_based_on_whether_config_change_valid(new_configs, is_expected_to_be_valid):
+    """Test that the charm has the correct state after handling the config-changed event."""
     # Arrange:
     ctx = testing.Context(RequestAuthenticationIntegratorCharm)
-    check_in = testing.CheckInfo(
-        CHECK_NAME,
-        level=pebble.CheckLevel.READY,
-        status=pebble.CheckStatus.UP,  # Simulate the Pebble check passing.
-    )
-    container_in = testing.Container(
-        "some-container",
-        can_connect=True,
-        layers={"base": layer},
-        service_statuses={SERVICE_NAME: pebble.ServiceStatus.INACTIVE},
-        check_infos={check_in},
-    )
-    state_in = testing.State(containers={container_in})
-    monkeypatch.setattr("charm.request_authentication_integrator.get_version", mock_get_version)
+    state_in = testing.State(containers={})
 
     # Act:
-    state_out = ctx.run(ctx.on.pebble_ready(container_in), state_in)
+    state_out = ctx.run(ctx.on.config_changed(new_configs), state_in)
 
     # Assert:
-    container_out = state_out.get_container(container_in.name)
-    assert container_out.service_statuses[SERVICE_NAME] == pebble.ServiceStatus.ACTIVE
-    assert state_out.workload_version is not None
-    assert state_out.unit_status == testing.ActiveStatus()
-
-
-def test_pebble_ready_service_not_ready():
-    """Test that the charm raises an error if the workload isn't ready after Pebble starts it."""
-    # Arrange:
-    ctx = testing.Context(RequestAuthenticationIntegratorCharm)
-    check_in = testing.CheckInfo(
-        CHECK_NAME,
-        level=pebble.CheckLevel.READY,
-        status=pebble.CheckStatus.DOWN,  # Simulate the Pebble check failing.
+    assert state_out.unit_status == (
+        testing.ActiveStatus()
+        if is_expected_to_be_valid else
+        testing.BlockedStatus(f"invalid config value for '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}'")
     )
-    container_in = testing.Container(
-        "some-container",
-        can_connect=True,
-        layers={"base": layer},
-        service_statuses={SERVICE_NAME: pebble.ServiceStatus.INACTIVE},
-        check_infos={check_in},
-    )
-    state_in = testing.State(containers={container_in})
-
-    # Act & assert:
-    with pytest.raises(testing.errors.UncaughtCharmError):
-        ctx.run(ctx.on.pebble_ready(container_in), state_in)
