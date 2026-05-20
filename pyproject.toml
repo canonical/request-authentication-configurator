@@ -3,35 +3,7 @@
 
 [project]
 name = "request-authentication-integrator"
-version = "0.0.1"
-requires-python = ">=3.10"
-
-# Dependencies of the charm code
-# You should include the dependencies of the code in src/. You should also include the
-# dependencies of any charmlibs that the charm uses (copy the dependencies from PYDEPS).
-dependencies = [
-    "ops>=3,<4",
-]
-
-[dependency-groups]
-# Dependencies of linting and static type checks
-lint = [
-    "ruff",
-    "codespell",
-    "pyright",
-]
-# Dependencies of unit tests
-unit = [
-    "coverage[toml]",
-    "ops[testing]",
-    "pytest",
-]
-# Dependencies of integration tests
-integration = [
-    "jubilant",
-    "pytest",
-    "PyYAML",
-]
+requires-python = ">=3.12,<4.0"
 
 # Testing tools configuration
 [tool.coverage.run]
@@ -74,3 +46,38 @@ skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
 
 [tool.pyright]
 include = ["src", "tests"]
+
+# dependency management:
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.charm]
+optional = true
+
+[tool.poetry.group.charm.dependencies]
+ops = "^3"
+
+[tool.poetry.group.lint]
+optional = true
+
+[tool.poetry.group.lint.dependencies]
+ruff = "*"
+codespell = "*"
+pyright = "*"
+
+[tool.poetry.group.unit]
+optional = true
+
+[tool.poetry.group.unit.dependencies]
+coverage = { version = "*", extras = ["toml"] }
+ops = { version = "*", extras = ["testing"] }
+pytest = "*"
+
+[tool.poetry.group.integration]
+optional = true
+
+[tool.poetry.group.integration.dependencies]
+jubilant = "*"
+pytest = "*"
+PyYAML = "*"
