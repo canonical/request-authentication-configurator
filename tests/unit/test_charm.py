@@ -18,14 +18,14 @@ def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
 
 
 @pytest.mark.parametrize(
-    "new_configs, is_expected_to_be_valid",
+    "new_configs, are_expected_to_be_valid",
     [
         (compose_charm_configs("kubeflow-userid"), True),
         (compose_charm_configs(""), False),
         (compose_charm_configs("mlflow-userid"), True),
     ]
 )
-def test_unit_status_based_on_whether_config_change_valid(new_configs, is_expected_to_be_valid):
+def test_unit_status_based_on_whether_config_change_valid(new_configs, are_expected_to_be_valid):
     """Test that the charm has the correct state after handling the config-changed event."""
     # Arrange:
     ctx = testing.Context(RequestAuthenticationIntegratorCharm)
@@ -37,6 +37,6 @@ def test_unit_status_based_on_whether_config_change_valid(new_configs, is_expect
     # Assert:
     assert state_out.unit_status == (
         testing.ActiveStatus()
-        if is_expected_to_be_valid else
+        if are_expected_to_be_valid else
         testing.BlockedStatus(f"invalid config value for '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}'")
     )
