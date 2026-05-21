@@ -69,7 +69,6 @@ jobs:
     with:
         charm-path: ${{ matrix.charm }}
 
-
   lint:
     name: Lint
     runs-on: ubuntu-24.04
