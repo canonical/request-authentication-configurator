@@ -13,13 +13,9 @@ Use links instead.
 Charmhub package name: request-authentication-integrator
 More information: https://charmhub.io/request-authentication-integrator
 
-Describe your charm in one or two sentences.
+A charm integrator to have `RequestAuthentication.security.istio.io` custom resources created.
 
 ## Other resources
-
-<!-- If your charm is documented somewhere else other than Charmhub, provide a link separately. -->
-
-- [Read more](https://example.com)
 
 - [Contributing](CONTRIBUTING.md) <!-- or link to other contribution documentation -->
 
