@@ -18,9 +18,9 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
 
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
-        framework.observe(self.on.config_changed, self._on_pebble_ready)
+        framework.observe(self.on.config_changed, self._on_config_changed)
 
-    def _on_config_changed(self, event: ops.PebbleReadyEvent):
+    def _on_config_changed(self, event: ops.ConfigChangedEvent):
         """Handle config-changed event."""
         logger.info(
             f"config change detected, new value for '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}': "

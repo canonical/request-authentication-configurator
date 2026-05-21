@@ -29,10 +29,10 @@ def test_unit_status_based_on_whether_config_change_valid(new_configs, are_expec
     """Test that the charm has the correct state after handling the config-changed event."""
     # Arrange:
     ctx = testing.Context(RequestAuthenticationIntegratorCharm)
-    state_in = testing.State(containers={})
+    state_in = testing.State(config=new_configs)
 
     # Act:
-    state_out = ctx.run(ctx.on.config_changed(new_configs), state_in)
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
 
     # Assert:
     assert state_out.unit_status == (
