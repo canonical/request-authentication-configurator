@@ -28,10 +28,10 @@ def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
 def test_unit_status_based_on_whether_config_change_valid(new_configs, are_expected_to_be_valid):
     """Test that the charm has the correct state after handling the config-changed event."""
     # Arrange:
-    ctx = testing.Context(RequestAuthenticationIntegratorCharm)
-    state_in = testing.State(config=new_configs)
+    ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
     # Act:
+    state_in = testing.State(config=new_configs)  # state associated to the event, not initial one
     state_out = ctx.run(ctx.on.config_changed(), state_in)
 
     # Assert:
