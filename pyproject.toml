@@ -38,6 +38,9 @@ lint.ignore = [
 extend-exclude = ["__pycache__", "*.egg_info"]
 lint.per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
 
+[tool.ruff.lint.isort]
+known-first-party = ["charm"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
