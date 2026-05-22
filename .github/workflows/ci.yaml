@@ -123,28 +123,6 @@ jobs:
     secrets:
       charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
 
-  integration-library:
-    name: Integration tests - library
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Install dependencies
-        run: pipx install tox
-
-      - name: Setup environment
-        run: |
-          sudo apt-get remove -y docker-ce docker-ce-cli containerd.io
-          sudo rm -rf /run/containerd
-          sudo snap install concierge --classic
-          sudo concierge prepare --trace
-
-      - name: Integration tests
-        run: |
-          tox -vve integration-library -- --model testing
-
   integration:
     name: Integration tests - charm
     needs:
