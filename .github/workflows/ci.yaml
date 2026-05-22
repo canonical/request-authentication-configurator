@@ -101,7 +101,7 @@ jobs:
       contents: read
     with:
       path-to-charm-directory: ${{ matrix.charm }}
-      cache: true
+      cache: false  # TODO: re-enable CCC once charm registered and added to CCC
 
   release:
     strategy:
