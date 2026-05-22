@@ -96,6 +96,9 @@ jobs:
     needs:
       - get-charm-paths-track
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v49.0.1
+    permissions:
+      actions: read
+      contents: read
     with:
       path-to-charm-directory: ${{ matrix.charm }}
       cache: true
