@@ -150,7 +150,7 @@ jobs:
           # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@24.04-amd64.charm
           # We need to find a better way to dynamically get this value
           export CHARM_PATH=${{ github.workspace }}/request-authentication-integrator_ubuntu@24.04-amd64.charm
-          tox -vve integration -- --model testing
+          tox -vve integration
 
       # On failure, capture debugging resources
       - name: Get all
