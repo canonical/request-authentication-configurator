@@ -153,8 +153,7 @@ jobs:
           tox -vve integration
 
       - name: Get juju status
-        run: juju status
-        if: failure()
+        run: juju status --integrations
 
       - name: Get charm logs
         run: kubectl logs --tail 100 -n testing -l app.kubernetes.io/name=request-authentication-integrator -c charm
