@@ -113,6 +113,9 @@ jobs:
       - get-charm-paths-track
       - build
     uses: canonical/data-platform-workflows/.github/workflows/release_charm_pr.yaml@v49.0.1
+    permissions:
+      actions: read
+      contents: read
     with:
       track: ${{ needs.get-charm-paths-track.outputs.track }}
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
