@@ -8,7 +8,6 @@ from ops import testing
 
 from charm import RequestAuthenticationIntegratorCharm
 
-
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 
 
@@ -26,7 +25,7 @@ def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
         (compose_charm_configs("kubeflow-userid"), True, False),
         (compose_charm_configs("mlflow-userid"), True, False),
         (compose_charm_configs(""), False, False),
-    ]
+    ],
 )
 def test_app_and_unit_status_based_on_leadership_and_whether_config_change_valid(
     new_configs, are_new_configs_expected_to_be_valid, is_unit_leader

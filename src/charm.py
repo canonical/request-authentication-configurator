@@ -53,7 +53,7 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
     @property
     def user_id_header_name(self) -> str:
         """Get the user ID header name from the respective charm config."""
-        return self.model.config[CONFIG_KEY_FOR_USER_ID_HEADER_NAME]
+        return str(self.model.config[CONFIG_KEY_FOR_USER_ID_HEADER_NAME])
 
 
 if __name__ == "__main__":  # pragma: nocover
