@@ -1,0 +1,22 @@
+name: request-authentication-integrator
+title: RequestAuthentication Integrator
+summary: A charm integrator to have `RequestAuthentication.security.istio.io` custom resources created
+description: |
+  A charm integrator to have `RequestAuthentication.security.istio.io` custom resources created.
+
+  This charm exposes a config option to define the desired claim-to-header mapping for JWT tokens
+  validated by `RequestAuthentication`s, integrates with Hydra to obtain the JWT issuer of employed
+  identities, and integrates with two separate Istio charms managing K8s Gateways to have them
+  create a `RequestAuthentication` each, attached to the respective K8s Gateway, one for UI-based
+  access and the other for programmatic-based access, both sharing the collected JWT issuer and
+  claim-to-header mapping.
+
+  This charms encompasses the common logic to have such custom `RequestAuthentication`s set up so
+  that it can be reused for different product solutions and easily maintained in a unified place.
+
+  This charm meets the need of having two diffenent `RequestAuthentication`s targeting two separate
+  K8s Gateways when sharing all other fields, including JWT issues and claim-to-header mapping.
+
+# NOTE: this charms does not operate workloads as its sole purpose is to integrate with other charms
+containers: {}
+resources: {}

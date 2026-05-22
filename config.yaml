@@ -1,0 +1,11 @@
+options:
+  user-id-header-name:
+    description: |
+      Configures the name of the header whose value represents the user identity, for the created
+      `RequestAuthentication`s to pass the respective JWT claim representing the user identity to
+      downstream applications as such a header.
+
+      Any argument that can be used as value for the `header` key in `outputClaimToHeaders` of
+      `RequestAuthentication` is acceptable:
+      https://istio.io/latest/docs/reference/config/security/request_authentication/#JWTRule-output_claim_to_headers
+    type: string

@@ -1,0 +1,83 @@
+# Copyright 2026 Ubuntu
+# See LICENSE file for licensing details.
+
+[project]
+name = "request-authentication-integrator"
+requires-python = ">=3.12,<4.0"
+
+# Testing tools configuration
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+log_cli_level = "INFO"
+
+# Linting tools configuration
+[tool.ruff]
+line-length = 99
+lint.select = ["E", "W", "F", "C", "N", "D", "I001"]
+lint.ignore = [
+    "D105",
+    "D107",
+    "D203",
+    "D204",
+    "D213",
+    "D215",
+    "D400",
+    "D404",
+    "D406",
+    "D407",
+    "D408",
+    "D409",
+    "D413",
+]
+extend-exclude = ["__pycache__", "*.egg_info"]
+lint.per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.codespell]
+skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
+
+[tool.pyright]
+include = ["src", "tests"]
+
+# dependency management:
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.charm]
+optional = true
+
+[tool.poetry.group.charm.dependencies]
+ops = "^3"
+
+[tool.poetry.group.lint]
+optional = true
+
+[tool.poetry.group.lint.dependencies]
+ruff = "*"
+codespell = "*"
+pyright = "*"
+
+[tool.poetry.group.unit]
+optional = true
+
+[tool.poetry.group.unit.dependencies]
+coverage = { version = "*", extras = ["toml"] }
+ops = { version = "*", extras = ["testing"] }
+pytest = "*"
+
+[tool.poetry.group.integration]
+optional = true
+
+[tool.poetry.group.integration.dependencies]
+jubilant = "*"
+pytest = "*"
+PyYAML = "*"
