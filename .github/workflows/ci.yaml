@@ -83,7 +83,7 @@ jobs:
       - get-charm-paths-track
     uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
     with:
-      charm-path: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
+      charm-path: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths)[0] }}
 
   build:
     name: Build charm
@@ -94,7 +94,7 @@ jobs:
       actions: read
       contents: read
     with:
-      path-to-charm-directory: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
+      path-to-charm-directory: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths)[0] }}
       cache: false  # TODO: re-enable CCC once charm registered and added to CCC
 
   release:
@@ -110,7 +110,7 @@ jobs:
     with:
       track: ${{ needs.get-charm-paths-track.outputs.track }}
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
-      path-to-charm-directory: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
+      path-to-charm-directory: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths)[0] }}
     secrets:
       charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
 
