@@ -152,19 +152,6 @@ jobs:
           export CHARM_PATH=${{ github.workspace }}/request-authentication-integrator_ubuntu@24.04-amd64.charm
           tox -vve integration
 
-      # On failure, capture debugging resources
-      - name: Get all
-        run: kubectl get all -A
-        if: failure()
-
-      - name: Describe deployments
-        run: kubectl describe deployments -A
-        if: failure()
-
-      - name: Describe replicasets
-        run: kubectl describe replicasets -A
-        if: failure()
-
       - name: Get juju status
         run: juju status
         if: failure()
