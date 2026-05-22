@@ -18,5 +18,5 @@ description: |
   K8s Gateways when sharing all other fields, including JWT issues and claim-to-header mapping.
 
 # NOTE: this charms does not operate workloads as its sole purpose is to integrate with other charms
-containers: []
-resources: []
+containers: {}
+resources: {}
