@@ -160,7 +160,8 @@ jobs:
           # Pass the path where the charm artefact is downloaded to the tox command
           # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@24.04-amd64.charm
           # We need to find a better way to dynamically get this value
-          tox -vve integration-charm -- --model testing --charm-path=${{ github.workspace }}/${{ matrix.charm }}_ubuntu@24.04-amd64.charm
+          CHARM_PATH=${{ github.workspace }}/${{ matrix.charm }}_ubuntu@24.04-amd64.charm
+          tox -vve integration-charm -- --model testing
 
       # On failure, capture debugging resources
       - name: Get all
