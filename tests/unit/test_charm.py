@@ -46,8 +46,9 @@ def test_app_and_unit_status_based_on_leadership_and_whether_config_change_valid
             # assert state_out.app_status == testing.ActiveStatus()
         else:
             expected_message = (
-                f"[config_validation] invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' "
-                f"config value: '{user_id_header_name_config_value}'"
+                "[config_validation] invalid config change, "
+                f"'{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' config value: "
+                f"'{user_id_header_name_config_value}'"
             )
             assert state_out.unit_status == testing.BlockedStatus(expected_message)
             # assert state_out.app_status == testing.BlockedStatus(expected_message)
