@@ -32,7 +32,7 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
         )
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        """Handle config-changed event"""
+        """Handle config-changed event."""
         logger.info(
             f"config change detected, new value for '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}': "
             f"{self.user_id_header_name}"
