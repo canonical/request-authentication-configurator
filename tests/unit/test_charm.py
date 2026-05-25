@@ -53,6 +53,6 @@ def test_app_and_unit_status_based_on_leadership_and_whether_config_change_valid
             assert state_out.unit_status == testing.BlockedStatus(expected_message)
             # assert state_out.app_status == testing.BlockedStatus(expected_message)
     else:
-        expected_message = '[leadership-gate] Waiting for leadership'
+        expected_message = "[leadership-gate] Waiting for leadership"
         assert state_out.unit_status == testing.WaitingStatus(expected_message)
         # assert state_out.app_status == testing.WaitingStatus(expected_message)
