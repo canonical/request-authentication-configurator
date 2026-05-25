@@ -32,7 +32,7 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
         self.config_validation = self.charm_reconciler.add(
             component=ConfigValidationComponent(
                 charm=self,
-                name="config_validation",
+                name="config-validation",
                 config_key_for_user_id_header_name=CONFIG_KEY_FOR_USER_ID_HEADER_NAME,
             ),
             depends_on=[self.leadership_gate],

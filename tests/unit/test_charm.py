@@ -43,16 +43,17 @@ def test_app_and_unit_status_based_on_leadership_and_whether_config_change_valid
     if is_unit_leader:
         if are_new_configs_expected_to_be_valid:
             assert state_out.unit_status == testing.ActiveStatus()
-            # assert state_out.app_status == testing.ActiveStatus()
+            assert state_out.app_status == testing.ActiveStatus()
         else:
             expected_message = (
-                "[config_validation] invalid config change, "
-                f"'{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' config value: "
+                f"invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' config value: "
                 f"'{user_id_header_name_config_value}'"
             )
-            assert state_out.unit_status == testing.BlockedStatus(expected_message)
-            # assert state_out.app_status == testing.BlockedStatus(expected_message)
+            assert state_out.unit_status == testing.BlockedStatus(
+                f"[config-validation] {expected_message}"
+            )
+            assert state_out.app_status == testing.BlockedStatus(expected_message)
     else:
         expected_message = "[leadership-gate] Waiting for leadership"
         assert state_out.unit_status == testing.WaitingStatus(expected_message)
-        # assert state_out.app_status == testing.WaitingStatus(expected_message)
+        assert state_out.app_status == testing.UnknownStatus()

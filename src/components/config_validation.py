@@ -45,6 +45,10 @@ class ConfigValidationComponent(Component):
         else:
             self._component_status = ops.BlockedStatus(f"invalid config change, {message}")
 
+        # NOTE: Chisme only sets unit status - via `self.get_status()` - on its own, so it is
+        # required to explicitly set the app status for it not to be left unknown:
+        self._charm.app.status = self._component_status
+
     def get_status(self):
         """Return the status."""
         return self._component_status
