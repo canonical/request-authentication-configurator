@@ -7,6 +7,7 @@
 import logging
 
 import ops
+from charmed_kubeflow_chisme.components import CharmReconciler, LeadershipGateComponent
 
 logger = logging.getLogger(__name__)
 
@@ -18,23 +19,25 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
 
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
+
         framework.observe(self.on.config_changed, self._on_config_changed)
-        framework.observe(self.on.leader_elected, self._on_leader_elected)
+
+        self.charm_reconciler = CharmReconciler(self)
+        self.leadership_gate = self.charm_reconciler.add(
+            component=LeadershipGateComponent(
+                charm=self,
+                name="leadership-gate",
+            ),
+            depends_on=[],
+        )
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        """Handle config-changed event."""
+        """Handle config-changed event"""
         logger.info(
             f"config change detected, new value for '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}': "
             f"{self.user_id_header_name}"
         )
-        self._update_status()
 
-    def _on_leader_elected(self, event: ops.LeaderElectedEvent):
-        """Handle leader-elected event."""
-        self._update_status()
-
-    def _update_status(self):
-        """Update unit and application status."""
         if self.is_user_id_header_name_valid:
             self.unit.status = ops.ActiveStatus()
             if self.unit.is_leader():

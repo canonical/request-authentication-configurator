@@ -56,28 +56,29 @@ package-mode = false
 optional = true
 
 [tool.poetry.group.charm.dependencies]
-ops = "^3"
+charmed-kubeflow-chisme = "^0.4.25"
+ops = "^2.17.1"
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
-ruff = "*"
-codespell = "*"
-pyright = "*"
+ruff = "^0.8.0"
+codespell = "^2.3.0"
+pyright = "^1.1.386"
 
 [tool.poetry.group.unit]
 optional = true
 
 [tool.poetry.group.unit.dependencies]
-coverage = { version = "*", extras = ["toml"] }
-ops = { version = "*", extras = ["testing"] }
-pytest = "*"
+coverage = { version = "^7.6.1", extras = ["toml"] }
+ops = { version = "^2.17.1", extras = ["testing"] }
+pytest = "^8.3.4"
 
 [tool.poetry.group.integration]
 optional = true
 
 [tool.poetry.group.integration.dependencies]
 jubilant = "*"
-pytest = "*"
-PyYAML = "*"
+pytest = "^8.3.4"
+PyYAML = "^6.0.2"
