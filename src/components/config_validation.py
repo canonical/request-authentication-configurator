@@ -28,7 +28,7 @@ class ConfigValidationComponent(Component):
         """Return whether the component is ready for execution."""
         return self._charm.unit.is_leader()
 
-    def _configure_app_leader(self, _):
+    def _configure_app_leader(self, event):
         """Validate the provided config value for the user-ID header name."""
         user_id_header_name = str(
             self._charm.model.config[self._config_key_for_user_id_header_name]
