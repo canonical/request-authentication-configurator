@@ -31,6 +31,8 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
             depends_on=[],
         )
 
+        self.charm_reconciler.install_default_event_handlers()
+
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
         """Handle config-changed event."""
         logger.info(
