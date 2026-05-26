@@ -33,15 +33,17 @@ def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
 
 def test_update_config(juju: jubilant.Juju):
     """Verify charm config changes for the user-ID header name are validated correctly."""
-    juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: INVALID_HEADER_NAME})
+    # for invalid config changes, the charm gets blocked:
     expected_invalid_config_message = (
         f"[config-validation] invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' "
         f"config value: '{INVALID_HEADER_NAME}'"
     )
+    juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: INVALID_HEADER_NAME})
     juju.wait(
         lambda status: status.apps[APPLICATION_NAME].is_blocked
         and status.apps[APPLICATION_NAME].app_status.message == expected_invalid_config_message
     )
 
+    # for valid config changes, the charms gets active:
     juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME})
     juju.wait(lambda status: status.apps[APPLICATION_NAME].is_active)
