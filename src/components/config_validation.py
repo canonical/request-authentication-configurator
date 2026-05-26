@@ -14,9 +14,10 @@ class ConfigValidationComponent(Component):
 
     def __init__(self, *args, config_key_for_user_id_header_name, **kwargs):
         super().__init__(*args, **kwargs)
-        self._events_to_observe.append(getattr(self._charm.on, "config_changed"))
 
         self._config_key_for_user_id_header_name = config_key_for_user_id_header_name
+
+        self._events_to_observe.append(getattr(self._charm.on, "config_changed"))
 
     _VALID_HEADER_NAME_RE = re.compile(r"^[!#$%&'*+\-.^_`|~A-Za-z0-9]+$")
 

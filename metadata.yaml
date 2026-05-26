@@ -20,3 +20,17 @@ description: |
 # NOTE: this charms does not operate workloads as its sole purpose is to integrate with other charms
 containers: {}
 resources: {}
+
+requires:
+  m2m-request-auth:
+    description: |
+      To have a `RequestAuthentication` custom resource created for the K8s Gateway-based ingress
+      managing programmatic (machine-to-machine, M2M) access to the cluster.
+    interface: istio_request_auth
+    limit: 1
+  ui-request-auth:
+    description: |
+      To have a `RequestAuthentication` custom resource created for the K8s Gateway-based ingress
+      managing user-interface (UI) access to the cluster.
+    interface: istio_request_auth
+    limit: 1
