@@ -17,8 +17,8 @@ def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
 
 
 @pytest.mark.parametrize("is_unit_leader", [True, False])
-def test_status_based_on_leadership(is_unit_leader):
-    """Test that the charm has the correct unit and app statuses based on leadership."""
+def test_unit_status_based_on_leadership(is_unit_leader):
+    """Test that the charm has the correct unit status based on leadership."""
     # Arrange:
     ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
@@ -30,11 +30,9 @@ def test_status_based_on_leadership(is_unit_leader):
     # Assert:
     if is_unit_leader:
         assert state_out.unit_status == testing.ActiveStatus()
-        # assert state_out.app_status == testing.ActiveStatus()
     else:
         expected_message = "[leadership-gate] Waiting for leadership"
         assert state_out.unit_status == testing.WaitingStatus(expected_message)
-        # assert state_out.app_status == testing.UnknownStatus()
 
 
 @pytest.mark.parametrize(
@@ -48,10 +46,10 @@ def test_status_based_on_leadership(is_unit_leader):
         ("kubeflow:userid", False),
     ],
 )
-def test_status_based_on_whether_config_change_valid(
+def test_unit_status_based_on_whether_config_change_valid(
     user_id_header_name_config_value, are_new_configs_expected_to_be_valid
 ):
-    """Test that the charm has the correct unit and app statuses after config-changed events."""
+    """Test that the charm has the correct unit status after config-changed events."""
     # Arrange:
     ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
@@ -63,7 +61,6 @@ def test_status_based_on_whether_config_change_valid(
     # Assert:
     if are_new_configs_expected_to_be_valid:
         assert state_out.unit_status == testing.ActiveStatus()
-        # assert state_out.app_status == testing.ActiveStatus()
     else:
         expected_message = (
             f"invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' config value: "
@@ -72,4 +69,3 @@ def test_status_based_on_whether_config_change_valid(
         assert state_out.unit_status == testing.BlockedStatus(
             f"[config-validation] {expected_message}"
         )
-        # assert state_out.app_status == testing.BlockedStatus(expected_message)
