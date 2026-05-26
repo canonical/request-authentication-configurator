@@ -6,6 +6,6 @@ options:
       downstream applications as such a header.
 
       Any argument that can be used as value for the `header` key in `outputClaimToHeaders` of
-      `RequestAuthentication` is acceptable:
+      `RequestAuthentication` — that is any valid HTTP header field name — is acceptable:
       https://istio.io/latest/docs/reference/config/security/request_authentication/#JWTRule-output_claim_to_headers
     type: string
