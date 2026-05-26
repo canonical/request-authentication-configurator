@@ -43,9 +43,9 @@ def test_status_based_on_leadership(is_unit_leader):
         ("kubeflow-userid", True),
         ("mlflow-userid", True),
         ("", False),
-        ("kubeflow-userid", True),
-        ("mlflow-userid", True),
-        ("", False),
+        ("invalid:", False),
+        ("not a valid one", False),
+        ("kubeflow:userid", False),
     ],
 )
 def test_status_based_on_whether_config_change_valid(
