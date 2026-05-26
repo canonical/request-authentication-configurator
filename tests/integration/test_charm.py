@@ -16,6 +16,8 @@ METADATA = yaml.safe_load(pathlib.Path("metadata.yaml").read_text())
 CHARM_NAME = METADATA["name"]
 APPLICATION_NAME = "-".join(("my", CHARM_NAME))
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
+INVALID_HEADER_NAME = "an invalid: header name"
+VALID_HEADER_NAME = "kubeflow-userid"
 
 
 def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
@@ -24,6 +26,15 @@ def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
         charm.resolve(),
         app=APPLICATION_NAME,
         resources={},
-        config={CONFIG_KEY_FOR_USER_ID_HEADER_NAME: "kubeflow-userid"},
+        config={CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME},
     )
-    juju.wait(jubilant.all_active)
+    juju.wait(lambda status: status.apps[APPLICATION_NAME].status == "active")
+
+
+def test_update_config(juju: jubilant.Juju):
+    """Verify charm config changes for the user-ID header name are validated correctly."""
+    juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: INVALID_HEADER_NAME})
+    juju.wait(lambda status: status.apps[APPLICATION_NAME].status == "blocked")
+
+    juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME})
+    juju.wait(lambda status: status.apps[APPLICATION_NAME].status == "active")
