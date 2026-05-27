@@ -3,6 +3,7 @@
 #
 # To learn more about testing, see https://documentation.ubuntu.com/ops/latest/explanation/testing/
 
+from itertools import product
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -89,3 +90,51 @@ def test_unit_status_based_on_whether_config_change_valid(
         assert state_out.unit_status == testing.BlockedStatus(
             f"[config-validation] {expected_message}"
         )
+
+
+@pytest.mark.parametrize(
+    "is_unit_leader, is_m2m_integration_established, is_ui_integration_established",
+    list(product([False, True], repeat=3))  # all permutations (possible tuples) of three booleans
+)
+@patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
+@patch("components.config_validation.ConfigValidationComponent.get_status")
+def test_integrations_for_request_authentication(
+    _: MagicMock,
+    mock_leadership_gate_get_status: MagicMock,
+    mock_config_validation_get_status: MagicMock,
+    is_unit_leader,
+    is_m2m_integration_established,
+    is_ui_integration_established,
+):
+    """Test that the charm has the correct unit status based on leadership."""
+    # Arrange:
+
+    user_id_header_name = "kubeflow-userid"
+    mock_config_validation_get_status.return_value = testing.ActiveStatus()
+    mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
+    ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
+
+    # Act:
+
+    with (
+        patch(
+            "components.request_auth_integration.RequestAuthRequirerComponent.get_status"
+        ) as mock_request_auth_integration_get_status,
+        patch(
+            "components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader"
+        ) as mock_request_auth_integration_configure_app_leader,
+    ):
+        mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
+        mock_request_auth_integration_configure_app_leader
+        state_in = testing.State(
+            config=compose_charm_configs(user_id_header_name),
+            leader=is_unit_leader
+        )
+        state_out = ctx.run(ctx.on.config_changed(), state_in)
+
+    # Assert:
+    if ...:
+        assert state_out.unit_status == testing.ActiveStatus()
+    else:
+        expected_message = "[...] ..."
+        assert state_out.unit_status == testing.WaitingStatus(expected_message)
