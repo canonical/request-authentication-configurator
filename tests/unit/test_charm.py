@@ -43,8 +43,9 @@ def test_unit_status_based_on_leadership(
     if is_unit_leader:
         assert state_out.unit_status == testing.ActiveStatus()
     else:
-        expected_message = "[leadership-gate] Waiting for leadership"
-        assert state_out.unit_status == testing.WaitingStatus(expected_message)
+        assert state_out.unit_status == testing.WaitingStatus(
+            "[leadership-gate] Waiting for leadership"
+        )
 
 
 @pytest.mark.parametrize(
@@ -83,12 +84,9 @@ def test_unit_status_based_on_whether_config_change_valid(
     if are_new_configs_expected_to_be_valid:
         assert state_out.unit_status == testing.ActiveStatus()
     else:
-        expected_message = (
-            f"invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' config value: "
-            f"'{user_id_header_name_config_value}'"
-        )
         assert state_out.unit_status == testing.BlockedStatus(
-            f"[config-validation] {expected_message}"
+            f"[config-validation] invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' "
+            f"config value: '{user_id_header_name_config_value}'"
         )
 
 
