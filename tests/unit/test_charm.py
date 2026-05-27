@@ -57,22 +57,25 @@ def test_unit_status_based_on_leadership(
         ("kubeflow:userid", False),
     ],
 )
+@patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader")
 def test_unit_status_based_on_whether_config_change_valid(
     _: MagicMock,
     mock_request_auth_integration_get_status: MagicMock,
+    mock_leadership_gate_get_status: MagicMock,
     user_id_header_name_config_value,
     are_new_configs_expected_to_be_valid,
 ):
     """Test that the charm has the correct unit status after config-changed events."""
     # Arrange:
+    mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
     mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
     ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
     # Act:
     new_charm_configs = compose_charm_configs(user_id_header_name_config_value)
-    state_in = testing.State(config=new_charm_configs, leader=True)
+    state_in = testing.State(config=new_charm_configs)
     state_out = ctx.run(ctx.on.config_changed(), state_in)
 
     # Assert:
