@@ -150,7 +150,7 @@ def test_integrations_for_request_authentication(
     elif is_m2m_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
-                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
+                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_UI
             )
         )
 
