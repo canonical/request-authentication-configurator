@@ -44,6 +44,6 @@ def test_update_config(juju: jubilant.Juju):
         and status.apps[APPLICATION_NAME].app_status.message == expected_invalid_config_message
     )
 
-    # for valid config changes, the charms gets active:
+    # for valid config changes, the charm gets active:
     juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME})
     juju.wait(lambda status: status.apps[APPLICATION_NAME].is_active)

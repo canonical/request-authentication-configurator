@@ -21,13 +21,13 @@ The module offers the following configurable inputs:
 | `revision`| number | Revision number of the charm name | False |
 
 ### Outputs
-Upon applied, the module exports the following outputs:
+When applied, the module exports the following outputs:
 
 | Name | Description |
 | - | - |
 | `app_name`|  Application name |
 | `provides`| Map of `provides` endpoints |
-| `requires`|  Map of `reqruires` endpoints |
+| `requires`|  Map of `requires` endpoints |
 
 ## Usage
 

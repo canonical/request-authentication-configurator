@@ -46,9 +46,7 @@ class ConfigValidationComponent(Component):
 
     def get_status(self):
         """Validate the provided config value for the user-ID header name."""
-        user_id_header_name = str(
-            self._charm.model.config[self._config_key_for_user_id_header_name]
-        )
+        user_id_header_name = self._charm.user_id_header_name  # pyright: ignore[reportAttributeAccessIssue] noqa: E501
 
         message = (
             f"'{self._config_key_for_user_id_header_name}' config value: '{user_id_header_name}'"

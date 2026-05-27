@@ -46,7 +46,7 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
         self.m2m_request_auth = self.charm_reconciler.add(
             component=RequestAuthRequirerComponent(
                 charm=self,
-                name="m2m-request-auth",
+                name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
                 claim_mapped_to_header="sub",
                 integration_name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
                 jwt_issuer=self.jwt_issuer,
@@ -57,7 +57,7 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
         self.ui_request_auth = self.charm_reconciler.add(
             component=RequestAuthRequirerComponent(
                 charm=self,
-                name="ui-request-auth",
+                name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
                 claim_mapped_to_header="email",
                 integration_name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
                 jwt_issuer=self.jwt_issuer,
@@ -68,7 +68,7 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
         self.charm_reconciler.install_default_event_handlers()
 
     @property
-    def user_id_header_name(self) -> str:
+    def user_id_header_name(self) -> str:  # NOTE: defined here because used by several components
         """Get the user ID header name from the respective charm config."""
         return str(self.model.config[CONFIG_KEY_FOR_USER_ID_HEADER_NAME])
 

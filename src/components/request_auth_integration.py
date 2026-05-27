@@ -33,7 +33,9 @@ class RequestAuthRequirerComponent(Component):
 
     def _configure_app_leader(self, event):
         """Update the integration data to have the RequestAuthentication up to date."""
-        self.request_auth = IstioRequestAuthRequirer(self, relation_name=self.integration_name)
+        self.request_auth = IstioRequestAuthRequirer(
+            self._charm, relation_name=self.integration_name
+        )
         self.request_auth.publish_data([self.jwt_rule])
 
     def get_status(self):
@@ -51,7 +53,10 @@ class RequestAuthRequirerComponent(Component):
             issuer=self.jwt_issuer,
             forward_original_token=True,
             claim_to_headers=[
-                ClaimToHeader(header=self.user_id_header_name, claim=self.claim_mapped_to_header)
+                ClaimToHeader(
+                    header=self._charm.user_id_header_name,  # pyright: ignore[reportAttributeAccessIssue] noqa: E501
+                    claim=self.claim_mapped_to_header,
+                )
             ],
             from_headers=[FromHeader(name=JWT_HEADER_NAME, prefix=JWT_HEADER_VALUE_PREFIX)],
         )
