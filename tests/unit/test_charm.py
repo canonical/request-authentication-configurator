@@ -11,7 +11,12 @@ from ops import testing
 
 from charm import RequestAuthenticationIntegratorCharm
 
+BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION = (
+    "[{missing_integration_name}] Integration {missing_integration_name} not established"
+)
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
+REQ_AUTH_INTEGRATION_NAME_FOR_M2M = "m2m-request-auth"
+REQ_AUTH_INTEGRATION_NAME_FOR_UI = "ui-request-auth"
 
 
 def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
@@ -132,8 +137,50 @@ def test_integrations_for_request_authentication(
 
     # Assert:
 
-    if ...:
+    if is_m2m_integration_established and is_ui_integration_established:
         assert state_out.unit_status == testing.ActiveStatus()
+
+        if is_unit_leader:
+            # assert `request_auth.publish_data` of M2M called once and of UI called once
+            ...
+        else:
+            # assert `request_auth.publish_data` of neither called
+            ...
+
+    elif is_m2m_integration_established:
+        assert state_out.unit_status == testing.BlockedStatus(
+            BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
+                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
+            )
+        )
+
+        if is_unit_leader:
+            # assert `request_auth.publish_data` of M2M called once and of UI never called
+            ...
+        else:
+            # assert `request_auth.publish_data` of neither called
+            ...
+
+    elif is_ui_integration_established:
+        assert state_out.unit_status == testing.BlockedStatus(
+            BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
+                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
+            )
+        )
+
+        if is_unit_leader:
+            # assert `request_auth.publish_data` of M2M never called and of UI called once
+            ...
+        else:
+            # assert `request_auth.publish_data` of neither called
+            ...
+
     else:
-        expected_message = "[...] ..."
-        assert state_out.unit_status == testing.WaitingStatus(expected_message)
+        assert state_out.unit_status == testing.BlockedStatus(
+            BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
+                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
+            )
+        )
+
+        # assert `request_auth.publish_data` of neither called
+        ...
