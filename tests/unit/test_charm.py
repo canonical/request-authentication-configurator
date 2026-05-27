@@ -133,6 +133,7 @@ def test_integrations_for_request_authentication(
         state_out = ctx.run(ctx.on.config_changed(), state_in)
 
     # Assert:
+
     if ...:
         assert state_out.unit_status == testing.ActiveStatus()
     else:
