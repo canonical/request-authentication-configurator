@@ -109,7 +109,7 @@ def test_integrations_for_request_authentication(
     is_m2m_integration_established,
     is_ui_integration_established,
 ):
-    """Test that the charm has the correct unit status based on leadership."""
+    """Test that the charm behaves according to established RequestAuthentication integrations."""
     # Arrange:
 
     user_id_header_name = "kubeflow-userid"
