@@ -158,9 +158,9 @@ def test_integrations_for_request_authentication(
         with ctx(ctx.on.config_changed(), state_in) as mgr:
             state_out = mgr.run()
 
+            # just to ensure that tests themselves are defined correctly:
             if is_unit_leader and is_m2m_integration_established:
                 assert mgr.charm.m2m_request_auth.component.request_auth is m2m_request_auth_mock
-
             if is_unit_leader and is_ui_integration_established:
                 assert mgr.charm.ui_request_auth.component.request_auth is ui_request_auth_mock
 
