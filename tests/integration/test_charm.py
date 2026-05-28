@@ -49,7 +49,7 @@ EXPECTED_JWT_CLAIM_BY_INGRESS = {
     APPLICATION_NAME_FOR_INGRESS_FOR_UI: "email",
 }
 
-REQUEST_AUTHENTICATION_CUSTOM_RESOURCE = lightkube.generic_resource.create_namespaced_resource(
+REQUEST_AUTHENTICATION_CUSTOM_RESOURCE = lightkube.generic_resource.create_namespaced_resource(  # pyright: ignore [reportAttributeAccessIssue] noqa: E501
     group="security.istio.io",
     version="v1",
     kind="RequestAuthentication",
