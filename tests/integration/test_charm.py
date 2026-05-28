@@ -10,7 +10,7 @@ import pathlib
 import jubilant
 import yaml
 
-from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, POSTGRESQL
+from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, LOGIN_UI, POSTGRESQL, TRAEFIK
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +22,20 @@ APPLICATION_NAME_FOR_IDENTITY_DATABASE = "identity-database"
 APPLICATION_NAME_FOR_INGRESS_FOR_M2M = "istio-ingress-m2m"
 APPLICATION_NAME_FOR_INGRESS_FOR_UI = "istio-ingress-ui"
 APPLICATION_NAME_FOR_ISTIO = "istio"
+APPLICATION_NAME_FOR_LOGIN_UI = "login-ui"
+APPLICATION_NAME_FOR_TRAEFIK = "traefik"
 
 INTEGRATION_ENDPOINT_FOR_DATABASE_BY_HYDRA = "pg-database"
 INTEGRATION_ENDPOINT_FOR_DATABASE_BY_POSTGRESQL = "database"
 INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG = "istio-ingress-config"
+INTEGRATION_ENDPOINT_FOR_UI_INFO = "ui-endpoint-info"
 INTEGRATION_ENDPOINT_FOR_OAUTH_BY_HYDRA = "oauth"
 INTEGRATION_ENDPOINT_FOR_OAUTH_BY_CHARM_UNDER_TEST = "oauth-jwt-issuer"
 INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_INGRESS = "istio-request-auth"
 INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_CHARM_UNDER_TEST_FOR_M2M = "request-auth-m2m"
 INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_CHARM_UNDER_TEST_FOR_UI = "request-auth-ui"
+INTEGRATION_ENDPOINT_FOR_ROUTE_BY_HYDRA = "public-route"
+INTEGRATION_ENDPOINT_FOR_ROUTE_BY_TRAEFIK = "traefik-route"
 
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 INVALID_HEADER_NAME = "an invalid: header name"
@@ -57,9 +62,9 @@ def test_deploy_istio_and_its_ingresses(juju: jubilant.Juju):
     """Deploy Istio and its K8s Gateway-based ingresses and verify they are active."""
     logger.info("Deploying Istio and its ingresses...")
     for charm, application_name in (
-        (ISTIO_K8S, APPLICATION_NAME_FOR_ISTIO),
         (ISTIO_INGRESS_K8S, APPLICATION_NAME_FOR_INGRESS_FOR_M2M),
         (ISTIO_INGRESS_K8S, APPLICATION_NAME_FOR_INGRESS_FOR_UI),
+        (ISTIO_K8S, APPLICATION_NAME_FOR_ISTIO),
     ):
         juju.deploy(
             app=application_name,
@@ -89,12 +94,14 @@ def test_deploy_istio_and_its_ingresses(juju: jubilant.Juju):
     )
 
 
-def test_deploy_oauth_provider(juju: jubilant.Juju):
-    """Deploy the Oauth provider and verify it is active."""
-    logger.info("Deploying the identity provider and its database...")
+def test_deploy_identity_provider(juju: jubilant.Juju):
+    """Deploy the identity provider charms and verify they are active."""
+    logger.info("Deploying the identity provider charms...")
     for charm, application_name in (
         (HYDRA, APPLICATION_NAME_FOR_HYDRA),
+        (LOGIN_UI, APPLICATION_NAME_FOR_LOGIN_UI),
         (POSTGRESQL, APPLICATION_NAME_FOR_IDENTITY_DATABASE),
+        (TRAEFIK, APPLICATION_NAME_FOR_TRAEFIK),
     ):
         juju.deploy(
             app=application_name,
@@ -104,17 +111,27 @@ def test_deploy_oauth_provider(juju: jubilant.Juju):
             trust=charm.trust,
         )
 
-    logger.info("Integrating the identity provider with its database...")
+    logger.info("Integrating the identity provider charms...")
     juju.integrate(
         f"{APPLICATION_NAME_FOR_HYDRA}:{INTEGRATION_ENDPOINT_FOR_DATABASE_BY_HYDRA}",
         f"{APPLICATION_NAME_FOR_IDENTITY_DATABASE}:{INTEGRATION_ENDPOINT_FOR_DATABASE_BY_POSTGRESQL}",
     )
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_HYDRA}:{INTEGRATION_ENDPOINT_FOR_ROUTE_BY_HYDRA}",
+        f"{APPLICATION_NAME_FOR_TRAEFIK}:{INTEGRATION_ENDPOINT_FOR_ROUTE_BY_TRAEFIK}",
+    )
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_HYDRA}:{INTEGRATION_ENDPOINT_FOR_UI_INFO}",
+        f"{APPLICATION_NAME_FOR_LOGIN_UI}:{INTEGRATION_ENDPOINT_FOR_UI_INFO}",
+    )
 
-    logger.info("Waiting for the identity provider to be active...")
+    logger.info("Waiting for the identity provider charms to be active...")
     juju.wait(
         lambda status: (
             status.apps[APPLICATION_NAME_FOR_HYDRA].is_active
             and status.apps[APPLICATION_NAME_FOR_IDENTITY_DATABASE].is_active
+            and status.apps[APPLICATION_NAME_FOR_LOGIN_UI].is_active
+            and status.apps[APPLICATION_NAME_FOR_TRAEFIK].is_active
         )
     )
 

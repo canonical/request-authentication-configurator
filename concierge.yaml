@@ -13,7 +13,7 @@ providers:
       load-balancer:
         enabled: true
         l2-mode: true
-        cidrs: 10.64.140.43/31  # NOTE: at least two IPs required, one for each K8s Gateway-based ingress
+        cidrs: 10.64.140.43/30  # NOTE: at least three IPs required for integration tests
     bootstrap-constraints:
       root-disk: 2G
 
