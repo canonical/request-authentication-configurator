@@ -8,6 +8,8 @@ import logging
 import pathlib
 
 import jubilant
+import lightkube
+import pytest
 import yaml
 
 from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, LOGIN_UI, POSTGRESQL, TRAEFIK
@@ -41,6 +43,29 @@ CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 INVALID_HEADER_NAME = "an invalid: header name"
 VALID_HEADER_NAME_BEFORE = "kubeflow-userid"
 VALID_HEADER_NAME_AFTER = "mlflow-userid"
+
+EXPECTED_JWT_CLAIM_BY_INGRESS = {
+    APPLICATION_NAME_FOR_INGRESS_FOR_M2M: "sub",
+    APPLICATION_NAME_FOR_INGRESS_FOR_UI: "email",
+}
+
+REQUEST_AUTHENTICATION_CUSTOM_RESOURCE = lightkube.generic_resource.create_namespaced_resource(
+    group="security.istio.io",
+    version="v1",
+    kind="RequestAuthentication",
+    plural="requestauthentications",
+)
+
+
+@pytest.fixture(scope="session")
+def juju_model_namespace(juju: jubilant.Juju) -> str:
+    return juju.model.split(":")[-1] if juju.model else juju.show_model().short_name
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> lightkube.Client:
+    client = lightkube.Client()
+    return client
 
 
 def test_deploy_charm_under_test(charm: pathlib.Path, juju: jubilant.Juju):
@@ -136,22 +161,115 @@ def test_deploy_identity_provider_charms(juju: jubilant.Juju):
     )
 
 
-def test_no_request_authentication_resources_before_integrations(juju: jubilant.Juju):
+def test_no_request_authentication_resources_before_integrations(
+    juju_model_namespace: str,
+    lightkube_client: lightkube.Client,
+):
     """Verify no RequestAuthentication resources are created so far (before integrations)."""
-    ...  # TODO
+    req_auth_resources = list(
+        lightkube_client.list(
+            REQUEST_AUTHENTICATION_CUSTOM_RESOURCE,
+            namespace=juju_model_namespace,
+        )
+    )
+
+    assert len(req_auth_resources) == 0, (
+        f"Expected no RequestAuthentication resources in namespace '{juju_model_namespace}' "
+        f"before integrations, but found: {[item.metadata.name for item in req_auth_resources]}"
+    )
 
 
 def test_integrate_charm_under_test(juju: jubilant.Juju):
-    """Verify the charm under test can integrate with the Oauth provider and the ingresses."""
-    ...  # TODO
+    """Verify the charm under test can integrate with the OAuth provider and the ingresses."""
+    logger.info("Integrating the charm under test...")
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_CHARM_UNDER_TEST}:{INTEGRATION_ENDPOINT_FOR_OAUTH_BY_CHARM_UNDER_TEST}",
+        f"{APPLICATION_NAME_FOR_HYDRA}:{INTEGRATION_ENDPOINT_FOR_OAUTH_BY_HYDRA}",
+    )
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_CHARM_UNDER_TEST}:{INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_CHARM_UNDER_TEST_FOR_M2M}",
+        f"{APPLICATION_NAME_FOR_INGRESS_FOR_M2M}:{INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_INGRESS}",
+    )
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_CHARM_UNDER_TEST}:{INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_CHARM_UNDER_TEST_FOR_UI}",
+        f"{APPLICATION_NAME_FOR_INGRESS_FOR_UI}:{INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_INGRESS}",
+    )
 
     logger.info("Waiting for the charm under test to be active...")
     juju.wait(lambda status: status.apps[APPLICATION_NAME_FOR_CHARM_UNDER_TEST].is_active)
 
 
-def test_create_request_authentication_resources_after_integrations(juju: jubilant.Juju):
-    ...  # TODO
+def test_create_request_authentication_resources_after_integrations(
+    juju_model_namespace: str,
+    lightkube_client: lightkube.Client,
+):
     """Verify the expected RequestAuthentication resources are created after integrations."""
+    req_auth_resources = list(
+        lightkube_client.list(
+            REQUEST_AUTHENTICATION_CUSTOM_RESOURCE,
+            namespace=juju_model_namespace,
+        )
+    )
+
+    assert len(req_auth_resources) == 2, (
+        f"Expected two RequestAuthentication resources in namespace '{juju_model_namespace}' "
+        f"after integrations, but found: {[item.metadata.name for item in req_auth_resources]}"
+    )
+
+    claims_left_to_verify = set(EXPECTED_JWT_CLAIM_BY_INGRESS.values())
+
+    for req_auth in req_auth_resources:
+        req_auth_name = req_auth.metadata.name
+        # TODO: check `claimToHeaders` is not relied on
+
+        jwt_rules = req_auth.get("spec", {}).get("jwtRules", [])
+        assert len(jwt_rules) == 1, (
+            f"Expected one jwtRules entry for RequestAuthentication '{req_auth_name}', "
+            f"but found {len(jwt_rules)}"
+        )
+
+        claim_to_header_mapping = jwt_rules[0].get("outputClaimToHeaders")
+        assert claim_to_header_mapping is not None, (
+            "Expected one claim-to-header mapping in RequestAuthentication "
+            f"'{req_auth_name}', but none was found"
+        )
+        assert len(claim_to_header_mapping) == 1, (
+            "Expected exactly one claim-to-header mapping in RequestAuthentication "
+            f"'{req_auth_name}', but found {len(claim_to_header_mapping)}"
+        )
+
+        only_mapping = claim_to_header_mapping[0]
+        actual_claim = only_mapping.get("claim")
+        actual_header = only_mapping.get("header")
+
+        assert actual_header == VALID_HEADER_NAME_BEFORE, (
+            "Expected claim-to-header mapping to use header "
+            f"'{VALID_HEADER_NAME_BEFORE}' in RequestAuthentication '{req_auth_name}', "
+            f"but found '{actual_header}'"
+        )
+
+        target_refs = req_auth.get("spec", {}).get("targetRefs", [])
+        assert len(target_refs) == 1, (
+            f"Expected exactly one targetRef in RequestAuthentication '{req_auth_name}', "
+            f"but found {len(target_refs)}"
+        )
+        target_ref = target_refs[0]
+        associated_ingress = str(target_ref.get("name", ""))
+        assert associated_ingress in EXPECTED_JWT_CLAIM_BY_INGRESS, (
+            "Unable to recognize/determine associated ingress for RequestAuthentication "
+            f"'{req_auth_name}': '{associated_ingress}'"
+        )
+
+        expected_claim = EXPECTED_JWT_CLAIM_BY_INGRESS[associated_ingress]
+        assert expected_claim == actual_claim, (
+            "Unexpected claim in claim-to-header mapping for RequestAuthentication "
+            f"'{req_auth_name}' associated to ingress {associated_ingress}: "
+            f"expected '{expected_claim}', found '{actual_claim}'"
+        )
+
+        claims_left_to_verify.remove(expected_claim)
+
+    assert not claims_left_to_verify, "Ill-conceived test."
 
 
 def test_update_config(juju: jubilant.Juju):
@@ -184,5 +302,5 @@ def test_update_config(juju: jubilant.Juju):
 
 
 def test_update_request_authentication_resources_after_config_changes(juju: jubilant.Juju):
-    ...  # TODO
     """Verify RequestAuthentication resources are updated after config changes."""
+    raise NotImplementedError()

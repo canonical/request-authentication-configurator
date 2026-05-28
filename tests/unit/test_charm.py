@@ -39,7 +39,7 @@ def compose_request_auth_integrations(
 
 @pytest.mark.parametrize("is_unit_leader", [True, False])
 @patch("components.config_validation.ConfigValidationComponent.get_status")
-@patch("components.oauth_integration.OauthRequirerComponent.get_status")
+@patch("components.oauth_integration.OAuthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader")
 def test_unit_status_based_on_leadership(
@@ -83,7 +83,7 @@ def test_unit_status_based_on_leadership(
     ],
 )
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
-@patch("components.oauth_integration.OauthRequirerComponent.get_status")
+@patch("components.oauth_integration.OAuthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader")
 def test_unit_status_based_on_whether_config_change_valid(
@@ -122,9 +122,9 @@ def test_unit_status_based_on_whether_config_change_valid(
 )
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
 @patch("components.config_validation.ConfigValidationComponent.get_status")
-@patch("components.oauth_integration.OauthRequirerComponent.get_status")
+@patch("components.oauth_integration.OAuthRequirerComponent.get_status")
 @patch(
-    "components.oauth_integration.OauthRequirerComponent.jwt_issuer",
+    "components.oauth_integration.OAuthRequirerComponent.jwt_issuer",
     new_callable=PropertyMock,
     return_value="https://auth.example.com",
 )

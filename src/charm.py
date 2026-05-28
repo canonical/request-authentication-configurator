@@ -10,7 +10,7 @@ import ops
 from charmed_kubeflow_chisme.components import CharmReconciler, LeadershipGateComponent
 
 from components.config_validation import ConfigValidationComponent
-from components.oauth_integration import OauthRequirerComponent
+from components.oauth_integration import OAuthRequirerComponent
 from components.request_auth_integration import RequestAuthRequirerComponent
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
         )
 
         self.oauth = self.charm_reconciler.add(
-            component=OauthRequirerComponent(
+            component=OAuthRequirerComponent(
                 charm=self,
                 name=INTEGRATION_NAME_FOR_OAUTH,
                 integration_name=INTEGRATION_NAME_FOR_OAUTH,

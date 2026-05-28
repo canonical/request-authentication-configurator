@@ -1,4 +1,4 @@
-"""Chisme components to manage Oauth2 integration to obtain JWT issuer."""
+"""Chisme components to manage OAuth integration to obtain JWT issuer."""
 
 import logging
 
@@ -9,8 +9,8 @@ from charms.hydra.v0.oauth import OAuthRequirer
 logger = logging.getLogger(__name__)
 
 
-class OauthRequirerComponent(Component):
-    """Component to manage Oauth2 integration to obtain JWT issuer."""
+class OAuthRequirerComponent(Component):
+    """Component to manage OAuth integration to obtain JWT issuer."""
 
     def __init__(self, *args, integration_name, **kwargs):
         super().__init__(*args, **kwargs)
