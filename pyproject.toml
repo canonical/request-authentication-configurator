@@ -80,6 +80,7 @@ pytest = "^8.3.4"
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-jubilant = "*"
+charmed-kubeflow-chisme = "^0.4.25"
+jubilant = "^1.9.0"
 pytest = "^8.3.4"
 PyYAML = "^6.0.2"
