@@ -119,6 +119,9 @@ def test_integrate_charm_under_test(juju: jubilant.Juju):
     """Verify the charm under test can integrate with the Oauth provider and the ingresses."""
     ...  # TODO
 
+    logger.info("Waiting for the charm under test to be active...")
+    juju.wait(lambda status: status.apps[APPLICATION_NAME_FOR_CHARM_UNDER_TEST].is_active)
+
 
 def test_create_request_authentication_resources_after_integrations(juju: jubilant.Juju):
     ...  # TODO
