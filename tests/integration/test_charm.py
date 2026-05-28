@@ -10,7 +10,7 @@ import pathlib
 import jubilant
 import yaml
 
-from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S
+from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, POSTGRESQL
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,13 @@ METADATA = yaml.safe_load(pathlib.Path("metadata.yaml").read_text())
 
 APPLICATION_NAME_FOR_CHARM_UNDER_TEST = "-".join(("my", METADATA["name"]))
 APPLICATION_NAME_FOR_HYDRA = "hydra"
+APPLICATION_NAME_FOR_IDENTITY_DATABASE = "identity-database"
 APPLICATION_NAME_FOR_INGRESS_FOR_M2M = "istio-ingress-m2m"
 APPLICATION_NAME_FOR_INGRESS_FOR_UI = "istio-ingress-ui"
 APPLICATION_NAME_FOR_ISTIO = "istio"
 
+INTEGRATION_ENDPOINT_FOR_DATABASE_BY_HYDRA = "pg-database"
+INTEGRATION_ENDPOINT_FOR_DATABASE_BY_POSTGRESQL = "database"
 INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG = "istio-ingress-config"
 INTEGRATION_ENDPOINT_FOR_OAUTH_BY_HYDRA = "oauth"
 INTEGRATION_ENDPOINT_FOR_OAUTH_BY_CHARM_UNDER_TEST = "oauth-jwt-issuer"
@@ -88,10 +91,10 @@ def test_deploy_istio_and_its_ingresses(juju: jubilant.Juju):
 
 def test_deploy_oauth_provider(juju: jubilant.Juju):
     """Deploy the Oauth provider and verify it is active."""
-    logger.info("Deploying the identity provider...")
+    logger.info("Deploying the identity provider and its database...")
     for charm, application_name in (
         (HYDRA, APPLICATION_NAME_FOR_HYDRA),
-        # (..., ...),  # TODO
+        (POSTGRESQL, APPLICATION_NAME_FOR_IDENTITY_DATABASE),
     ):
         juju.deploy(
             app=application_name,
@@ -101,11 +104,17 @@ def test_deploy_oauth_provider(juju: jubilant.Juju):
             trust=charm.trust,
         )
 
+    logger.info("Integrating the identity provider with its database...")
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_HYDRA}:{INTEGRATION_ENDPOINT_FOR_DATABASE_BY_HYDRA}",
+        f"{APPLICATION_NAME_FOR_IDENTITY_DATABASE}:{INTEGRATION_ENDPOINT_FOR_DATABASE_BY_POSTGRESQL}",
+    )
+
     logger.info("Waiting for the identity provider to be active...")
     juju.wait(
         lambda status: (
             status.apps[APPLICATION_NAME_FOR_HYDRA].is_active
-            # and status.apps[...].is_active  # TODO
+            and status.apps[APPLICATION_NAME_FOR_IDENTITY_DATABASE].is_active
         )
     )
 
