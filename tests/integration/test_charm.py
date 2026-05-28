@@ -31,17 +31,18 @@ INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_CHARM_UNDER_TEST_FOR_UI = "request-auth
 
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 INVALID_HEADER_NAME = "an invalid: header name"
-VALID_HEADER_NAME = "kubeflow-userid"
+VALID_HEADER_NAME_BEFORE = "kubeflow-userid"
+VALID_HEADER_NAME_AFTER = "mlflow-userid"
 
 
 def test_deploy_charm_under_test(charm: pathlib.Path, juju: jubilant.Juju):
-    """Deploy the charm under test."""
+    """Deploy the charm under test and verify it gets blocked."""
     logger.info("Deploying the charm under test...")
     juju.deploy(
         charm.resolve(),
         app=APPLICATION_NAME_FOR_CHARM_UNDER_TEST,
         resources={},
-        config={CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME},
+        config={CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME_BEFORE},
         # trust=True,  # TODO: undestand if necessary
     )
 
@@ -50,7 +51,7 @@ def test_deploy_charm_under_test(charm: pathlib.Path, juju: jubilant.Juju):
 
 
 def test_deploy_istio_and_its_ingresses(juju: jubilant.Juju):
-    """Deploy Istio and its K8s Gateway-based ingresses."""
+    """Deploy Istio and its K8s Gateway-based ingresses and verify they are active."""
     logger.info("Deploying Istio and its ingresses...")
     for charm, application_name in (
         (ISTIO_K8S, APPLICATION_NAME_FOR_ISTIO),
@@ -86,7 +87,7 @@ def test_deploy_istio_and_its_ingresses(juju: jubilant.Juju):
 
 
 def test_deploy_oauth_provider(juju: jubilant.Juju):
-    """Deploy the Oauth provider."""
+    """Deploy the Oauth provider and verify it is active."""
     logger.info("Deploying the identity provider...")
     for charm, application_name in (
         (HYDRA, APPLICATION_NAME_FOR_HYDRA),
@@ -107,6 +108,21 @@ def test_deploy_oauth_provider(juju: jubilant.Juju):
             # and status.apps[...].is_active  # TODO
         )
     )
+
+
+def test_no_request_authentication_resources_before_integrations(juju: jubilant.Juju):
+    """Verify no RequestAuthentication resources are created so far (before integrations)."""
+    ...  # TODO
+
+
+def test_integrate_charm_under_test(juju: jubilant.Juju):
+    """Verify the charm under test can integrate with the Oauth provider and the ingresses."""
+    ...  # TODO
+
+
+def test_create_request_authentication_resources_after_integrations(juju: jubilant.Juju):
+    ...  # TODO
+    """Verify the expected RequestAuthentication resources are created after integrations."""
 
 
 def test_update_config(juju: jubilant.Juju):
@@ -133,6 +149,11 @@ def test_update_config(juju: jubilant.Juju):
     # for valid config changes, the charm gets active:
     juju.config(
         APPLICATION_NAME_FOR_CHARM_UNDER_TEST,
-        {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME},
+        {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME_AFTER},
     )
     juju.wait(lambda status: status.apps[APPLICATION_NAME_FOR_CHARM_UNDER_TEST].is_active)
+
+
+def test_update_request_authentication_resources_after_config_changes(juju: jubilant.Juju):
+    ...  # TODO
+    """Verify RequestAuthentication resources are updated after config changes."""
