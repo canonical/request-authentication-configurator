@@ -17,6 +17,7 @@ BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION = (
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 REQ_AUTH_INTEGRATION_NAME_FOR_M2M = "m2m-request-auth"
 REQ_AUTH_INTEGRATION_NAME_FOR_UI = "ui-request-auth"
+SOME_VALID_USERID_HEADER_NAME = "kubeflow-userid"
 
 
 def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
@@ -38,22 +39,28 @@ def compose_request_auth_integrations(
 
 @pytest.mark.parametrize("is_unit_leader", [True, False])
 @patch("components.config_validation.ConfigValidationComponent.get_status")
+@patch("components.oauth_integration.OauthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader")
 def test_unit_status_based_on_leadership(
     _: MagicMock,
     mock_request_auth_integration_get_status: MagicMock,
+    mock_oauth_integration_get_status: MagicMock,
     mock_config_validation_get_status: MagicMock,
     is_unit_leader,
 ):
     """Test that the charm has the correct unit status based on leadership."""
     # Arrange:
     mock_config_validation_get_status.return_value = testing.ActiveStatus()
+    mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
     mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
     ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
     # Act:
-    state_in = testing.State(leader=is_unit_leader)
+    state_in = testing.State(
+        leader=is_unit_leader,
+        config=compose_charm_configs(SOME_VALID_USERID_HEADER_NAME)
+    )
     state_out = ctx.run(ctx.on.config_changed(), state_in)
 
     # Assert:
@@ -68,7 +75,7 @@ def test_unit_status_based_on_leadership(
 @pytest.mark.parametrize(
     "user_id_header_name_config_value, are_new_configs_expected_to_be_valid",
     [
-        ("kubeflow-userid", True),
+        (SOME_VALID_USERID_HEADER_NAME, True),
         ("mlflow-userid", True),
         ("", False),
         ("invalid:", False),
@@ -77,11 +84,13 @@ def test_unit_status_based_on_leadership(
     ],
 )
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
+@patch("components.oauth_integration.OauthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader")
 def test_unit_status_based_on_whether_config_change_valid(
     _: MagicMock,
     mock_request_auth_integration_get_status: MagicMock,
+    mock_oauth_integration_get_status: MagicMock,
     mock_leadership_gate_get_status: MagicMock,
     user_id_header_name_config_value,
     are_new_configs_expected_to_be_valid,
@@ -89,6 +98,7 @@ def test_unit_status_based_on_whether_config_change_valid(
     """Test that the charm has the correct unit status after config-changed events."""
     # Arrange:
     mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
+    mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
     mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
     ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
@@ -113,9 +123,13 @@ def test_unit_status_based_on_whether_config_change_valid(
 )
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
 @patch("components.config_validation.ConfigValidationComponent.get_status")
+@patch("components.oauth_integration.OauthRequirerComponent.get_status")
+@patch("components.request_auth_integration.RequestAuthRequirerComponent.jwt_issuer")
 def test_integrations_for_request_authentication(  # noqa: C901
-    mock_leadership_gate_get_status: MagicMock,
+    mock_oauth_integration_jwt_issuer: MagicMock,
+    mock_oauth_integration_get_status: MagicMock,
     mock_config_validation_get_status: MagicMock,
+    mock_leadership_gate_get_status: MagicMock,
     is_unit_leader,
     is_m2m_integration_established,
     is_ui_integration_established,
@@ -123,10 +137,12 @@ def test_integrations_for_request_authentication(  # noqa: C901
     """Test that the charm behaves according to established RequestAuthentication integrations."""
     # Arrange:
 
-    user_id_header_name = "kubeflow-userid"
+    user_id_header_name = SOME_VALID_USERID_HEADER_NAME
 
-    mock_config_validation_get_status.return_value = testing.ActiveStatus()
     mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
+    mock_config_validation_get_status.return_value = testing.ActiveStatus()
+    mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
+    mock_oauth_integration_jwt_issuer.return_value = "https://auth.example.com"
 
     m2m_request_auth_mock = MagicMock(name="m2m_request_auth")
     ui_request_auth_mock = MagicMock(name="ui_request_auth")
