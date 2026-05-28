@@ -94,7 +94,7 @@ def test_deploy_istio_and_its_ingresses(juju: jubilant.Juju):
     )
 
 
-def test_deploy_identity_provider(juju: jubilant.Juju):
+def test_deploy_identity_provider_charms(juju: jubilant.Juju):
     """Deploy the identity provider charms and verify they are active."""
     logger.info("Deploying the identity provider charms...")
     for charm, application_name in (
