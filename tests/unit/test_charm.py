@@ -24,6 +24,18 @@ def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
     return {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: user_id_header_name}
 
 
+def compose_request_auth_integrations(
+    is_m2m_integration_established: bool, is_ui_integration_established: bool
+) -> list[testing.Relation]:
+    """Compose the RequestAuthentication integrations to include in the test state."""
+    relations = []
+    if is_m2m_integration_established:
+        relations.append(testing.Relation(endpoint=REQ_AUTH_INTEGRATION_NAME_FOR_M2M))
+    if is_ui_integration_established:
+        relations.append(testing.Relation(endpoint=REQ_AUTH_INTEGRATION_NAME_FOR_UI))
+    return relations
+
+
 @pytest.mark.parametrize("is_unit_leader", [True, False])
 @patch("components.config_validation.ConfigValidationComponent.get_status")
 @patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
@@ -102,7 +114,6 @@ def test_unit_status_based_on_whether_config_change_valid(
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
 @patch("components.config_validation.ConfigValidationComponent.get_status")
 def test_integrations_for_request_authentication(
-    _: MagicMock,
     mock_leadership_gate_get_status: MagicMock,
     mock_config_validation_get_status: MagicMock,
     is_unit_leader,
@@ -113,68 +124,63 @@ def test_integrations_for_request_authentication(
     # Arrange:
 
     user_id_header_name = "kubeflow-userid"
+
     mock_config_validation_get_status.return_value = testing.ActiveStatus()
     mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
+
+    m2m_request_auth_mock = MagicMock(name="m2m_request_auth")
+    ui_request_auth_mock = MagicMock(name="ui_request_auth")
+
+    def request_auth_requirer_factory(_, relation_name: str):
+        if relation_name == REQ_AUTH_INTEGRATION_NAME_FOR_M2M:
+            return m2m_request_auth_mock
+        if relation_name == REQ_AUTH_INTEGRATION_NAME_FOR_UI:
+            return ui_request_auth_mock
+        raise AssertionError(f"Unexpected relation name: {relation_name}")
+
     ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
     # Act:
 
-    with (
-        patch(
-            "components.request_auth_integration.RequestAuthRequirerComponent.get_status"
-        ) as mock_request_auth_integration_get_status,
-        patch(
-            "components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader"
-        ) as mock_request_auth_integration_configure_app_leader,
-    ):
-        mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
-        mock_request_auth_integration_configure_app_leader
+    with patch(
+        "components.request_auth_integration.IstioRequestAuthRequirer"
+    ) as mock_istio_request_auth_requirer:
+        mock_istio_request_auth_requirer.side_effect = request_auth_requirer_factory
         state_in = testing.State(
             config=compose_charm_configs(user_id_header_name),
-            leader=is_unit_leader
+            relations=compose_request_auth_integrations(
+                is_m2m_integration_established=is_m2m_integration_established,
+                is_ui_integration_established=is_ui_integration_established,
+            ),
+            leader=is_unit_leader,
         )
-        state_out = ctx.run(ctx.on.config_changed(), state_in)
+
+        with ctx(ctx.on.config_changed(), state_in) as mgr:
+            state_out = mgr.run()
+
+            if is_unit_leader and is_m2m_integration_established:
+                assert mgr.charm.m2m_request_auth.component.request_auth is m2m_request_auth_mock
+
+            if is_unit_leader and is_ui_integration_established:
+                assert mgr.charm.ui_request_auth.component.request_auth is ui_request_auth_mock
 
     # Assert:
 
+    # unit status:
     if is_m2m_integration_established and is_ui_integration_established:
         assert state_out.unit_status == testing.ActiveStatus()
-
-        if is_unit_leader:
-            # assert `request_auth.publish_data` of M2M called once and of UI called once
-            ...
-        else:
-            # assert `request_auth.publish_data` of neither called
-            ...
-
     elif is_m2m_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
                 missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_UI
             )
         )
-
-        if is_unit_leader:
-            # assert `request_auth.publish_data` of M2M called once and of UI never called
-            ...
-        else:
-            # assert `request_auth.publish_data` of neither called
-            ...
-
     elif is_ui_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
                 missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
             )
         )
-
-        if is_unit_leader:
-            # assert `request_auth.publish_data` of M2M never called and of UI called once
-            ...
-        else:
-            # assert `request_auth.publish_data` of neither called
-            ...
-
     else:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
@@ -182,5 +188,13 @@ def test_integrations_for_request_authentication(
             )
         )
 
-        # assert `request_auth.publish_data` of neither called
-        ...
+    # calls to update RequestAuthentication data:
+    if is_unit_leader and is_m2m_integration_established:
+        m2m_request_auth_mock.publish_data.assert_called_once()
+    else:
+        m2m_request_auth_mock.publish_data.assert_not_called()
+
+    if is_unit_leader and is_ui_integration_established:
+        ui_request_auth_mock.publish_data.assert_called_once()
+    else:
+        ui_request_auth_mock.publish_data.assert_not_called()

@@ -31,17 +31,18 @@ class RequestAuthRequirerComponent(Component):
             getattr(self._charm.on, f"{self.integration_name.replace('-', '_')}_relation_changed")
         )
 
+        self.request_auth = IstioRequestAuthRequirer(
+            self._charm, relation_name=self.integration_name
+    )
+
     def _configure_app_leader(self, event):
         """Update the integration data to have the RequestAuthentication up to date."""
         if self.is_integration_established:
-            self.request_auth = IstioRequestAuthRequirer(
-                self._charm, relation_name=self.integration_name
-            )
             self.request_auth.publish_data([self.jwt_rule])
 
     def get_status(self):
         """Validate the integration for RequestAuthentication."""
-        if self.is_integration_established:
+        if not self.is_integration_established:
             message = f"Integration {self.integration_name} not established"
             logger.info(message)
             return ops.BlockedStatus(message)
@@ -49,7 +50,7 @@ class RequestAuthRequirerComponent(Component):
 
     @property
     def is_integration_established(self) -> bool:
-        return self._charm.model.get_relation(self.integration_name) is None
+        return self._charm.model.get_relation(self.integration_name) is not None
 
     @property
     def jwt_rule(self) -> JWTRule:
