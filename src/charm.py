@@ -10,11 +10,13 @@ import ops
 from charmed_kubeflow_chisme.components import CharmReconciler, LeadershipGateComponent
 
 from components.config_validation import ConfigValidationComponent
+from components.oauth_integration import OauthRequirerComponent
 from components.request_auth_integration import RequestAuthRequirerComponent
 
 logger = logging.getLogger(__name__)
 
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
+INTEGRATION_NAME_FOR_OAUTH = "oauth"
 INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH = "m2m-request-auth"
 INTEGRATION_NAME_FOR_UI_REQUEST_AUTH = "ui-request-auth"
 
@@ -24,8 +26,6 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
 
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
-
-        self.jwt_issuer = ""  # TODO
 
         self.charm_reconciler = CharmReconciler(self)
 
@@ -39,6 +39,16 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
                 charm=self,
                 name="config-validation",
                 config_key_for_user_id_header_name=CONFIG_KEY_FOR_USER_ID_HEADER_NAME,
+                user_id_header_name=self.user_id_header_name,
+            ),
+            depends_on=[self.leadership_gate],
+        )
+
+        self.oauth = self.charm_reconciler.add(
+            component=OauthRequirerComponent(
+                charm=self,
+                name=INTEGRATION_NAME_FOR_OAUTH,
+                integration_name=INTEGRATION_NAME_FOR_OAUTH,
             ),
             depends_on=[self.leadership_gate],
         )
@@ -49,9 +59,10 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
                 name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
                 claim_mapped_to_header="sub",
                 integration_name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
-                jwt_issuer=self.jwt_issuer,
+                jwt_issuer=self.oauth.jwt_issuer,
+                user_id_header_name=self.user_id_header_name,
             ),
-            depends_on=[self.leadership_gate, self.config_validation],  # keep both explicit
+            depends_on=[self.config_validation, self.oauth],
         )
 
         self.ui_request_auth = self.charm_reconciler.add(
@@ -60,15 +71,16 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
                 name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
                 claim_mapped_to_header="email",
                 integration_name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
-                jwt_issuer=self.jwt_issuer,
+                jwt_issuer=self.oauth.jwt_issuer,
+                user_id_header_name=self.user_id_header_name,
             ),
-            depends_on=[self.leadership_gate, self.config_validation],  # keep both explicit
+            depends_on=[self.config_validation, self.oauth],
         )
 
         self.charm_reconciler.install_default_event_handlers()
 
     @property
-    def user_id_header_name(self) -> str:  # NOTE: defined here because used by several components
+    def user_id_header_name(self) -> str:
         """Get the user ID header name from the respective charm config."""
         return str(self.model.config[CONFIG_KEY_FOR_USER_ID_HEADER_NAME])
 

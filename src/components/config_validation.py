@@ -12,10 +12,11 @@ logger = logging.getLogger(__name__)
 class ConfigValidationComponent(Component):
     """Component to manage config-changed events."""
 
-    def __init__(self, *args, config_key_for_user_id_header_name, **kwargs):
+    def __init__(self, *args, config_key_for_user_id_header_name, user_id_header_name, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._config_key_for_user_id_header_name = config_key_for_user_id_header_name
+        self.config_key_for_user_id_header_name = config_key_for_user_id_header_name
+        self.user_id_header_name = user_id_header_name
 
         self._events_to_observe.append(getattr(self._charm.on, "config_changed"))
 
@@ -46,15 +47,14 @@ class ConfigValidationComponent(Component):
 
     def get_status(self):
         """Validate the provided config value for the user-ID header name."""
-        user_id_header_name = self._charm.user_id_header_name  # pyright: ignore[reportAttributeAccessIssue] noqa: E501
-
         message = (
-            f"'{self._config_key_for_user_id_header_name}' config value: '{user_id_header_name}'"
+            f"'{self.config_key_for_user_id_header_name}' config value: "
+            f"'{self.user_id_header_name}'"
         )
 
         logger.info(f"config change detected, {message}")
 
-        if not self.is_valid_http_header_field(user_id_header_name):
+        if not self.is_valid_http_header_field(self.user_id_header_name):
             return ops.BlockedStatus(f"invalid config change, {message}")
 
         return ops.ActiveStatus()

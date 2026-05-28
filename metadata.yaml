@@ -22,6 +22,11 @@ containers: {}
 resources: {}
 
 requires:
+  jwt-issuer:
+    description: |
+      To obtain the JWT issuer of employed identities from an OAuth provider.
+    interface: oauth
+    limit: 1
   m2m-request-auth:
     description: |
       To have a `RequestAuthentication` custom resource created for the K8s Gateway-based ingress

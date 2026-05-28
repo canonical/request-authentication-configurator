@@ -20,12 +20,21 @@ JWT_HEADER_VALUE_PREFIX = "Bearer "
 class RequestAuthRequirerComponent(Component):
     """Component to manage ingress integration for RequestAuthentication custom resource."""
 
-    def __init__(self, *args, claim_mapped_to_header, integration_name, jwt_issuer, **kwargs):
+    def __init__(
+        self,
+        *args,
+        claim_mapped_to_header,
+        integration_name,
+        jwt_issuer,
+        user_id_header_name,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
 
         self.claim_mapped_to_header = claim_mapped_to_header
         self.integration_name = integration_name
         self.jwt_issuer = jwt_issuer
+        self.user_id_header_name = user_id_header_name
 
         self._events_to_observe.append(
             getattr(self._charm.on, f"{self.integration_name.replace('-', '_')}_relation_changed")
@@ -60,7 +69,7 @@ class RequestAuthRequirerComponent(Component):
             forward_original_token=True,
             claim_to_headers=[
                 ClaimToHeader(
-                    header=self._charm.user_id_header_name,  # pyright: ignore[reportAttributeAccessIssue] noqa: E501
+                    header=self.user_id_header_name,
                     claim=self.claim_mapped_to_header,
                 )
             ],
