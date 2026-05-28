@@ -4,7 +4,6 @@ import logging
 
 import ops
 from charmed_kubeflow_chisme.components import Component
-
 from charms.hydra.v0.oauth import OAuthRequirer
 
 logger = logging.getLogger(__name__)
@@ -45,6 +44,7 @@ class OauthRequirerComponent(Component):
 
     @property
     def is_integration_established(self) -> bool:
+        """Check if the integration is established."""
         return self._charm.model.get_relation(self.integration_name) is not None
 
     @property

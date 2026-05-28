@@ -27,7 +27,7 @@ class RequestAuthRequirerComponent(Component):
         integration_name,
         jwt_issuer,
         user_id_header_name,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
@@ -42,7 +42,7 @@ class RequestAuthRequirerComponent(Component):
 
         self.request_auth = IstioRequestAuthRequirer(
             self._charm, relation_name=self.integration_name
-    )
+        )
 
     def _configure_app_leader(self, event):
         """Update the integration data to have the RequestAuthentication up to date."""
@@ -59,6 +59,7 @@ class RequestAuthRequirerComponent(Component):
 
     @property
     def is_integration_established(self) -> bool:
+        """Check if the integration is established."""
         return self._charm.model.get_relation(self.integration_name) is not None
 
     @property

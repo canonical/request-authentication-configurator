@@ -109,11 +109,11 @@ def test_unit_status_based_on_whether_config_change_valid(
 
 @pytest.mark.parametrize(
     "is_unit_leader, is_m2m_integration_established, is_ui_integration_established",
-    list(product([False, True], repeat=3))  # all permutations (possible tuples) of three booleans
+    list(product([False, True], repeat=3)),  # all permutations (possible tuples) of three booleans
 )
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
 @patch("components.config_validation.ConfigValidationComponent.get_status")
-def test_integrations_for_request_authentication(
+def test_integrations_for_request_authentication(  # noqa: C901
     mock_leadership_gate_get_status: MagicMock,
     mock_config_validation_get_status: MagicMock,
     is_unit_leader,
@@ -193,7 +193,6 @@ def test_integrations_for_request_authentication(
         m2m_request_auth_mock.publish_data.assert_called_once()
     else:
         m2m_request_auth_mock.publish_data.assert_not_called()
-
     if is_unit_leader and is_ui_integration_established:
         ui_request_auth_mock.publish_data.assert_called_once()
     else:
