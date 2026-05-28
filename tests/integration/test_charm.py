@@ -43,7 +43,7 @@ def test_deploy_charm_under_test(charm: pathlib.Path, juju: jubilant.Juju):
         app=APPLICATION_NAME_FOR_CHARM_UNDER_TEST,
         resources={},
         config={CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME_BEFORE},
-        # trust=True,  # TODO: undestand if necessary
+        # trust=True,  # TODO: understand if necessary
     )
 
     logger.info("Waiting for the charm under test to reach blocked status...")
