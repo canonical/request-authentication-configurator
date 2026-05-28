@@ -10,25 +10,97 @@ import pathlib
 import jubilant
 import yaml
 
+from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S
+
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(pathlib.Path("metadata.yaml").read_text())
-CHARM_NAME = METADATA["name"]
-APPLICATION_NAME = "-".join(("my", CHARM_NAME))
+
+APPLICATION_NAME_FOR_CHARM_UNDER_TEST = "-".join(("my", METADATA["name"]))
+APPLICATION_NAME_FOR_HYDRA = "hydra"
+APPLICATION_NAME_FOR_INGRESS_FOR_M2M = "istio-ingress-ui"
+APPLICATION_NAME_FOR_INGRESS_FOR_UI = "istio-ingress-m2m"
+APPLICATION_NAME_FOR_ISTIO = "istio"
+INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG = "istio-ingress-config"
+INTEGRATION_ENDPOINT_FOR_OAUTH = "oauth"
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 INVALID_HEADER_NAME = "an invalid: header name"
 VALID_HEADER_NAME = "kubeflow-userid"
 
 
-def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
+def test_deploy_charm_under_test(charm: pathlib.Path, juju: jubilant.Juju):
     """Deploy the charm under test."""
+    logger.info("Deploying the charm under test...")
     juju.deploy(
         charm.resolve(),
-        app=APPLICATION_NAME,
+        app=APPLICATION_NAME_FOR_CHARM_UNDER_TEST,
         resources={},
         config={CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME},
+        # trust=True,  # TODO: undestand if necessary
     )
-    juju.wait(lambda status: status.apps[APPLICATION_NAME].is_active)
+
+    logger.info("Waiting for the charm under test to reach blocked status...")
+    juju.wait(lambda status: status.apps[APPLICATION_NAME_FOR_CHARM_UNDER_TEST].is_blocked)
+
+
+def test_deploy_istio_and_its_ingresses(juju: jubilant.Juju):
+    """Deploy Istio and its K8s Gateway-based ingresses."""
+    logger.info("Deploying Istio and its ingresses...")
+    for charm, application_name in (
+        (ISTIO_K8S, APPLICATION_NAME_FOR_ISTIO),
+        (ISTIO_INGRESS_K8S, APPLICATION_NAME_FOR_INGRESS_FOR_M2M),
+        (ISTIO_INGRESS_K8S, APPLICATION_NAME_FOR_INGRESS_FOR_UI),
+    ):
+        juju.deploy(
+            app=application_name,
+            charm=charm.charm,
+            channel=charm.channel,
+            config=charm.config,
+            trust=charm.trust,
+        )
+
+    logger.info("Integrating Istio with its ingresses...")
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_ISTIO}:{INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG}",
+        f"{APPLICATION_NAME_FOR_INGRESS_FOR_M2M}:{INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG}",
+    )
+    juju.integrate(
+        f"{APPLICATION_NAME_FOR_ISTIO}:{INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG}",
+        f"{APPLICATION_NAME_FOR_INGRESS_FOR_UI}:{INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG}",
+    )
+
+    logger.info("Waiting for Istio and its ingresses to be active...")
+    juju.wait(
+        lambda status: (
+            status.apps[APPLICATION_NAME_FOR_ISTIO].is_active
+            and status.apps[APPLICATION_NAME_FOR_INGRESS_FOR_M2M].is_active
+            and status.apps[APPLICATION_NAME_FOR_INGRESS_FOR_UI].is_active
+        )
+    )
+
+
+def test_deploy_oauth_provider(juju: jubilant.Juju):
+    """Deploy the Oauth provider."""
+    logger.info("Deploying the identity provider...")
+    for charm, application_name in (
+        (HYDRA, APPLICATION_NAME_FOR_HYDRA),
+        # (..., ...),  # TODO
+    ):
+        juju.deploy(
+            app=application_name,
+            charm=charm.charm,
+            channel=charm.channel,
+            config=charm.config,
+            trust=charm.trust,
+        )
+
+    logger.info("Waiting for the identity provider to be active...")
+    juju.wait(
+        lambda status: (
+            status.apps[APPLICATION_NAME_FOR_HYDRA].is_active
+            # and status.apps[...].is_active  # TODO
+        )
+    )
 
 
 def test_update_config(juju: jubilant.Juju):
@@ -38,12 +110,23 @@ def test_update_config(juju: jubilant.Juju):
         f"[config-validation] invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' "
         f"config value: '{INVALID_HEADER_NAME}'"
     )
-    juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: INVALID_HEADER_NAME})
+    juju.config(
+        APPLICATION_NAME_FOR_CHARM_UNDER_TEST,
+        {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: INVALID_HEADER_NAME},
+    )
     juju.wait(
-        lambda status: status.apps[APPLICATION_NAME].is_blocked
-        and status.apps[APPLICATION_NAME].app_status.message == expected_invalid_config_message
+        lambda status: (
+            status.apps[APPLICATION_NAME_FOR_CHARM_UNDER_TEST].is_blocked
+            and (
+                status.apps[APPLICATION_NAME_FOR_CHARM_UNDER_TEST].app_status.message
+                == expected_invalid_config_message
+            )
+        )
     )
 
     # for valid config changes, the charm gets active:
-    juju.config(APPLICATION_NAME, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME})
-    juju.wait(lambda status: status.apps[APPLICATION_NAME].is_active)
+    juju.config(
+        APPLICATION_NAME_FOR_CHARM_UNDER_TEST,
+        {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: VALID_HEADER_NAME},
+    )
+    juju.wait(lambda status: status.apps[APPLICATION_NAME_FOR_CHARM_UNDER_TEST].is_active)
