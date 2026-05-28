@@ -4,7 +4,7 @@
 # To learn more about testing, see https://documentation.ubuntu.com/ops/latest/explanation/testing/
 
 from itertools import product
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from ops import testing
@@ -124,9 +124,13 @@ def test_unit_status_based_on_whether_config_change_valid(
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
 @patch("components.config_validation.ConfigValidationComponent.get_status")
 @patch("components.oauth_integration.OauthRequirerComponent.get_status")
-@patch("components.request_auth_integration.RequestAuthRequirerComponent.jwt_issuer")
+@patch(
+    "components.oauth_integration.OauthRequirerComponent.jwt_issuer",
+    new_callable=PropertyMock,
+    return_value="https://auth.example.com"
+)
 def test_integrations_for_request_authentication(  # noqa: C901
-    mock_oauth_integration_jwt_issuer: MagicMock,
+    _: PropertyMock,
     mock_oauth_integration_get_status: MagicMock,
     mock_config_validation_get_status: MagicMock,
     mock_leadership_gate_get_status: MagicMock,
@@ -142,7 +146,6 @@ def test_integrations_for_request_authentication(  # noqa: C901
     mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
     mock_config_validation_get_status.return_value = testing.ActiveStatus()
     mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
-    mock_oauth_integration_jwt_issuer.return_value = "https://auth.example.com"
 
     m2m_request_auth_mock = MagicMock(name="m2m_request_auth")
     ui_request_auth_mock = MagicMock(name="ui_request_auth")
