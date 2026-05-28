@@ -58,8 +58,7 @@ def test_unit_status_based_on_leadership(
 
     # Act:
     state_in = testing.State(
-        leader=is_unit_leader,
-        config=compose_charm_configs(SOME_VALID_USERID_HEADER_NAME)
+        leader=is_unit_leader, config=compose_charm_configs(SOME_VALID_USERID_HEADER_NAME)
     )
     state_out = ctx.run(ctx.on.config_changed(), state_in)
 
@@ -127,7 +126,7 @@ def test_unit_status_based_on_whether_config_change_valid(
 @patch(
     "components.oauth_integration.OauthRequirerComponent.jwt_issuer",
     new_callable=PropertyMock,
-    return_value="https://auth.example.com"
+    return_value="https://auth.example.com",
 )
 def test_integrations_for_request_authentication(  # noqa: C901
     _: PropertyMock,
