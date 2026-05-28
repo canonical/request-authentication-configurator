@@ -22,7 +22,7 @@ containers: {}
 resources: {}
 
 requires:
-  jwt-issuer:
+  oauth-jwt-issuer:
     description: |
       To obtain the JWT issuer of employed identities from an OAuth provider.
     interface: oauth
