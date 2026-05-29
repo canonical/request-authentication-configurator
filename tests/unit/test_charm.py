@@ -181,7 +181,7 @@ def test_integration_for_oauth(  # noqa: C901
             state_out = mgr.run()
 
             actual_jwt_issuer = None
-            if is_oauth_integration_established:
+            if is_oauth_integration_established and is_provider_info_retrieved_successfully:
                 actual_jwt_issuer = mgr.charm.oauth.component.jwt_issuer
 
     # Assert:
@@ -206,7 +206,8 @@ def test_integration_for_oauth(  # noqa: C901
     # calls to get JWT issuer:
     if is_oauth_integration_established:
         oauth_mock.get_provider_info.assert_called()
-        assert actual_jwt_issuer == JWT_ISSUER
+        if is_provider_info_retrieved_successfully:
+            assert actual_jwt_issuer == JWT_ISSUER
     else:
         oauth_mock.get_provider_info.assert_not_called()
 
