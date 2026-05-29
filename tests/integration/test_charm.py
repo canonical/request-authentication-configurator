@@ -63,7 +63,7 @@ TRAEFIK_LOAD_BALANCER_SERVICE_NAME = f"{APPLICATION_NAME_FOR_TRAEFIK}-lb"
 
 @pytest.fixture()
 def juju_model_namespace(juju: jubilant.Juju) -> str:
-    return "testing"
+    return juju.model.split(":")[-1] if juju.model else juju.show_model().short_name
 
 
 @pytest.fixture()
