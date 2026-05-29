@@ -11,6 +11,7 @@ import jubilant
 import lightkube
 import pytest
 import yaml
+from lightkube.generic_resource import create_namespaced_resource
 
 from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, LOGIN_UI, POSTGRESQL, TRAEFIK
 
@@ -49,7 +50,7 @@ EXPECTED_JWT_CLAIM_BY_INGRESS = {
     APPLICATION_NAME_FOR_INGRESS_FOR_UI: "email",
 }
 
-REQUEST_AUTHENTICATION_CUSTOM_RESOURCE = lightkube.generic_resource.create_namespaced_resource(  # pyright: ignore [reportAttributeAccessIssue] noqa: E501
+REQUEST_AUTHENTICATION_CUSTOM_RESOURCE = create_namespaced_resource(
     group="security.istio.io",
     version="v1",
     kind="RequestAuthentication",
