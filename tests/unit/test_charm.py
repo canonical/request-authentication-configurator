@@ -12,7 +12,11 @@ from ops import testing
 from charm import RequestAuthenticationIntegratorCharm
 
 BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION = (
-    "[{missing_integration_name}] Integration {missing_integration_name} not established"
+    "[{integration_name}] Integration {integration_name} not established"
+)
+BLOCKED_STATUS_MESSAGE_FOR_MISSING_PROVIDER_INFO = (
+    "Integration {integration_name} established but provider information"
+    " (including JWT issuer) not available yet"
 )
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 JWT_ISSUER = "https://auth.example.com"
@@ -123,8 +127,8 @@ def test_unit_status_based_on_whether_config_change_valid(
 
 
 @pytest.mark.parametrize(
-    "is_unit_leader, is_oauth_integration_established",
-    list(product([False, True], repeat=2)),  # all permutations (possible tuples) of two booleans
+    "is_unit_leader, is_oauth_integration_established, is_provider_info_retrieved_successfully",
+    list(product([False, True], repeat=3)),  # all permutations (possible tuples) of three booleans
 )
 @patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
 @patch("components.config_validation.ConfigValidationComponent.get_status")
@@ -137,6 +141,7 @@ def test_integration_for_oauth(  # noqa: C901
     mock_leadership_gate_get_status: MagicMock,
     is_unit_leader,
     is_oauth_integration_established,
+    is_provider_info_retrieved_successfully,
 ):
     """Test that the charm behaves according to established OAuth integration."""
     # Arrange:
@@ -152,11 +157,14 @@ def test_integration_for_oauth(  # noqa: C901
     # Act:
 
     with patch("components.oauth_integration.OAuthRequirer") as mock_oauth_requirer:
-        provider_info_mock = MagicMock()
-        provider_info_mock.issuer_url = JWT_ISSUER
-
         oauth_mock = MagicMock()
-        oauth_mock.get_provider_info.return_value = provider_info_mock
+
+        if is_provider_info_retrieved_successfully:
+            provider_info_mock = MagicMock()
+            provider_info_mock.issuer_url = JWT_ISSUER
+            oauth_mock.get_provider_info.return_value = provider_info_mock
+        else:
+            oauth_mock.get_provider_info.return_value = None
 
         mock_oauth_requirer.return_value = oauth_mock
 
@@ -180,11 +188,18 @@ def test_integration_for_oauth(  # noqa: C901
 
     # unit status:
     if is_oauth_integration_established:
-        assert state_out.unit_status == testing.ActiveStatus()
+        if is_provider_info_retrieved_successfully:
+            assert state_out.unit_status == testing.ActiveStatus()
+        else:
+            assert state_out.unit_status == testing.BlockedStatus(
+                BLOCKED_STATUS_MESSAGE_FOR_PROVIDER_INFO_NOT_AVAILABLE.format(
+                    integration_name=OAUTH_INTEGRATION_NAME
+                )
+            )
     else:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                missing_integration_name=OAUTH_INTEGRATION_NAME
+                integration_name=OAUTH_INTEGRATION_NAME
             )
         )
 
@@ -271,19 +286,19 @@ def test_integrations_for_request_authentication(  # noqa: C901
     elif is_m2m_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_UI
+                integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_UI
             )
         )
     elif is_ui_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
+                integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
             )
         )
     else:
         assert state_out.unit_status == testing.BlockedStatus(
             BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
+                integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
             )
         )
 
