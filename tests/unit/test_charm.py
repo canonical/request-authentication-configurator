@@ -11,12 +11,13 @@ from ops import testing
 
 from charm import RequestAuthenticationIntegratorCharm
 
-BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION = (
+BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION = (
     "[{missing_integration_name}] Integration {missing_integration_name} not established"
 )
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
-REQ_AUTH_INTEGRATION_NAME_FOR_M2M = "m2m-request-auth"
-REQ_AUTH_INTEGRATION_NAME_FOR_UI = "ui-request-auth"
+REQ_AUTH_INTEGRATION_NAME_FOR_M2M = "request-auth-m2m"
+REQ_AUTH_INTEGRATION_NAME_FOR_UI = "request-auth-ui"
+OAUTH_INTEGRATION_NAME = "oauth-jwt-issuer"
 SOME_VALID_USERID_HEADER_NAME = "kubeflow-userid"
 
 
@@ -25,8 +26,10 @@ def compose_charm_configs(user_id_header_name: str) -> dict[str, str]:
     return {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: user_id_header_name}
 
 
-def compose_request_auth_integrations(
-    is_m2m_integration_established: bool, is_ui_integration_established: bool
+def compose_integrations(
+    is_m2m_integration_established: bool,
+    is_ui_integration_established: bool,
+    is_oauth_integration_established: bool = True,
 ) -> list[testing.Relation]:
     """Compose the RequestAuthentication integrations to include in the test state."""
     relations = []
@@ -34,6 +37,8 @@ def compose_request_auth_integrations(
         relations.append(testing.Relation(endpoint=REQ_AUTH_INTEGRATION_NAME_FOR_M2M))
     if is_ui_integration_established:
         relations.append(testing.Relation(endpoint=REQ_AUTH_INTEGRATION_NAME_FOR_UI))
+    if is_oauth_integration_established:
+        relations.append(testing.Relation(endpoint=REQ_AUTH_INTEGRATION_NAME_FOR_OAUTH))
     return relations
 
 
@@ -60,7 +65,7 @@ def test_unit_status_based_on_leadership(
     state_in = testing.State(
         leader=is_unit_leader, config=compose_charm_configs(SOME_VALID_USERID_HEADER_NAME)
     )
-    state_out = ctx.run(ctx.on.config_changed(), state_in)
+    state_out = ctx.run(ctx.on.update_status(), state_in)
 
     # Assert:
     if is_unit_leader:
@@ -117,6 +122,68 @@ def test_unit_status_based_on_whether_config_change_valid(
 
 
 @pytest.mark.parametrize(
+    "is_unit_leader, is_oauth_integration_established",
+    list(product([False, True], repeat=2)),  # all permutations (possible tuples) of two booleans
+)
+@patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
+@patch("components.config_validation.ConfigValidationComponent.get_status")
+@patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
+@patch("components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader")
+def test_integration_for_oauth(  # noqa: C901
+    _: MagicMock,
+    mock_request_auth_integration_get_status: MagicMock,
+    mock_config_validation_get_status: MagicMock,
+    mock_leadership_gate_get_status: MagicMock,
+    is_unit_leader,
+    is_oauth_integration_established,
+):
+    """Test that the charm behaves according to established OAuth integration."""
+    # Arrange:
+
+    user_id_header_name = SOME_VALID_USERID_HEADER_NAME
+
+    mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
+    mock_config_validation_get_status.return_value = testing.ActiveStatus()
+    mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
+
+    ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
+
+    # Act:
+
+    with patch("components.oauth_integration.OAuthRequirer") as mock_oauth_requirer:
+        oauth_mock = MagicMock()
+        mock_oauth_requirer.return_value = oauth_mock
+        state_in = testing.State(
+            config=compose_charm_configs(user_id_header_name),
+            relations=compose_integrations(
+                is_m2m_integration_established=False,  # irrelevant because mocked
+                is_ui_integration_established=False,  # irrelevant because mocked
+                is_oauth_integration_established=is_oauth_integration_established,
+            ),
+            leader=is_unit_leader,
+        )
+        state_out = ctx.run(ctx.on.update_status(), state_in)
+
+    # Assert:
+
+    # unit status:
+    if is_oauth_integration_established:
+        assert state_out.unit_status == testing.ActiveStatus()
+    else:
+        assert state_out.unit_status == testing.BlockedStatus(
+            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
+                missing_integration_name=OAUTH_INTEGRATION_NAME
+            )
+        )
+
+    # calls to get JWT issuer:
+    if is_oauth_integration_established:
+        oauth_mock.get_provider_info.assert_called_once()
+    else:
+        oauth_mock.get_provider_info.assert_not_called()    
+
+
+@pytest.mark.parametrize(
     "is_unit_leader, is_m2m_integration_established, is_ui_integration_established",
     list(product([False, True], repeat=3)),  # all permutations (possible tuples) of three booleans
 )
@@ -166,14 +233,15 @@ def test_integrations_for_request_authentication(  # noqa: C901
         mock_istio_request_auth_requirer.side_effect = request_auth_requirer_factory
         state_in = testing.State(
             config=compose_charm_configs(user_id_header_name),
-            relations=compose_request_auth_integrations(
+            relations=compose_integrations(
                 is_m2m_integration_established=is_m2m_integration_established,
                 is_ui_integration_established=is_ui_integration_established,
+                is_oauth_integration_established=False,  # irrelevant because mocked
             ),
             leader=is_unit_leader,
         )
 
-        with ctx(ctx.on.config_changed(), state_in) as mgr:
+        with ctx(ctx.on.update_status(), state_in) as mgr:
             state_out = mgr.run()
 
             # just to ensure that tests themselves are defined correctly:
@@ -189,19 +257,19 @@ def test_integrations_for_request_authentication(  # noqa: C901
         assert state_out.unit_status == testing.ActiveStatus()
     elif is_m2m_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
-            BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
+            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
                 missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_UI
             )
         )
     elif is_ui_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
-            BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
+            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
                 missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
             )
         )
     else:
         assert state_out.unit_status == testing.BlockedStatus(
-            BLOCKED_STATUS_MESSAGE_FOR_MISSING_REQ_AUTH_INTEGRATION.format(
+            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
                 missing_integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
             )
         )
