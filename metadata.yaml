@@ -15,7 +15,7 @@ description: |
   that it can be reused for different product solutions and easily maintained in a unified place.
 
   This charm meets the need of having two diffenent `RequestAuthentication`s targeting two separate
-  K8s Gateways when sharing all other fields, including JWT issues and claim-to-header mapping.
+  K8s Gateways when sharing all other fields, including JWT issuer and claim-to-header mapping.
 
 # NOTE: this charms does not operate workloads as its sole purpose is to integrate with other charms
 containers: {}

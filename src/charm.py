@@ -7,6 +7,9 @@
 import logging
 
 import ops
+from charmed_kubeflow_chisme.components import CharmReconciler, LeadershipGateComponent
+
+from components.config_validation import ConfigValidationComponent
 
 logger = logging.getLogger(__name__)
 
@@ -18,37 +21,24 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
 
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
-        framework.observe(self.on.config_changed, self._on_config_changed)
-        framework.observe(self.on.leader_elected, self._on_leader_elected)
 
-    def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        """Handle config-changed event."""
-        logger.info(
-            f"config change detected, new value for '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}': "
-            f"{self.user_id_header_name}"
+        self.charm_reconciler = CharmReconciler(self)
+
+        self.leadership_gate = self.charm_reconciler.add(
+            component=LeadershipGateComponent(charm=self, name="leadership-gate"),
+            depends_on=[],
         )
-        self._update_status()
 
-    def _on_leader_elected(self, event: ops.LeaderElectedEvent):
-        """Handle leader-elected event."""
-        self._update_status()
+        self.config_validation = self.charm_reconciler.add(
+            component=ConfigValidationComponent(
+                charm=self,
+                name="config-validation",
+                config_key_for_user_id_header_name=CONFIG_KEY_FOR_USER_ID_HEADER_NAME,
+            ),
+            depends_on=[self.leadership_gate],
+        )
 
-    def _update_status(self):
-        """Update unit and application status."""
-        if self.is_user_id_header_name_valid:
-            self.unit.status = ops.ActiveStatus()
-            if self.unit.is_leader():
-                self.app.status = ops.ActiveStatus()
-        else:
-            message = f"invalid config value for '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}'"
-            self.unit.status = ops.BlockedStatus(message)
-            if self.unit.is_leader():
-                self.app.status = ops.BlockedStatus(message)
-
-    @property
-    def is_user_id_header_name_valid(self) -> bool:
-        """Check whether the user ID header name is valid."""
-        return self.user_id_header_name != ""
+        self.charm_reconciler.install_default_event_handlers()
 
     @property
     def user_id_header_name(self) -> str:
