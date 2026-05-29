@@ -58,42 +58,41 @@ REQUEST_AUTHENTICATION_CUSTOM_RESOURCE = create_namespaced_resource(
     plural="requestauthentications",
 )
 
+TRAEFIK_LOAD_BALANCER_SERVICE_NAME = f"{APPLICATION_NAME_FOR_TRAEFIK}-lb"
 
-@pytest.fixture(scope="session")
+
+@pytest.fixture()
 def juju_model_namespace(juju: jubilant.Juju) -> str:
-    return juju.model.split(":")[-1] if juju.model else juju.show_model().short_name
+    return "testing"
 
 
-@pytest.fixture(scope="function")
-def jwt_issuer(
-    juju_model_namespace: str,
-    lightkube_client: lightkube.Client,
-) -> str:
-    service = lightkube_client.get(
-        Service,
-        APPLICATION_NAME_FOR_TRAEFIK,
-        namespace=juju_model_namespace,
-    )
-
-    external_ip = None
-    if service.status and service.status.loadBalancer and service.status.loadBalancer.ingress:
-        ingress = service.status.loadBalancer.ingress[0]
-        external_ip = ingress.ip or ingress.hostname
-    elif service.spec and service.spec.externalIPs:
-        external_ip = service.spec.externalIPs[0]
-
-    assert external_ip, (
-        "Unable to determine external IP for Service "
-        f"'{APPLICATION_NAME_FOR_TRAEFIK}' in namespace '{juju_model_namespace}'"
-    )
-
-    return str(external_ip)
-
-
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def lightkube_client() -> lightkube.Client:
     client = lightkube.Client()
     return client
+
+
+def get_jwt_issuer(namespace: str, lightkube_client: lightkube.Client) -> str:
+    """Get the JWT issuer employed by Hydra through Traefik."""
+    service = lightkube_client.get(
+        Service,
+        TRAEFIK_LOAD_BALANCER_SERVICE_NAME,
+        namespace=namespace,
+    )
+
+    jwt_issuer_ip_adddess = None
+    if service.status and service.status.loadBalancer and service.status.loadBalancer.ingress:
+        ingress = service.status.loadBalancer.ingress[0]
+        jwt_issuer_ip_adddess = ingress.ip or ingress.hostname
+    elif service.spec and service.spec.externalIPs:
+        jwt_issuer_ip_adddess = service.spec.externalIPs[0]
+
+    assert jwt_issuer_ip_adddess, (
+        f"No external IP for Service '{TRAEFIK_LOAD_BALANCER_SERVICE_NAME}' "
+        f"in namespace '{namespace}'"
+    )
+
+    return f"http://{jwt_issuer_ip_adddess}"
 
 
 def verify_request_authentication_resources_as_expected(
@@ -298,7 +297,6 @@ def test_integrate_charm_under_test(juju: jubilant.Juju):
 
 def test_create_request_authentication_resources_after_integrations(
     juju_model_namespace: str,
-    jwt_issuer: str,
     lightkube_client: lightkube.Client,
 ):
     """Verify the expected RequestAuthentication resources are created after integrations."""
@@ -316,7 +314,7 @@ def test_create_request_authentication_resources_after_integrations(
 
     verify_request_authentication_resources_as_expected(
         expected_header_name=VALID_HEADER_NAME_BEFORE_CONFIG_CHANGE,
-        expected_jwt_issuer=jwt_issuer,
+        expected_jwt_issuer=get_jwt_issuer(juju_model_namespace, lightkube_client),
         request_authentication_resources=req_auth_resources,
     )
 
@@ -352,7 +350,6 @@ def test_update_config(juju: jubilant.Juju):
 
 def test_update_request_authentication_resources_after_config_changes(
     juju_model_namespace: str,
-    jwt_issuer: str,
     lightkube_client: lightkube.Client,
 ):
     """Verify RequestAuthentication resources are updated after config changes."""
@@ -370,6 +367,6 @@ def test_update_request_authentication_resources_after_config_changes(
 
     verify_request_authentication_resources_as_expected(
         expected_header_name=VALID_HEADER_NAME_AFTER_CONFIG_CHANGE,
-        expected_jwt_issuer=jwt_issuer,
+        expected_jwt_issuer=get_jwt_issuer(juju_model_namespace, lightkube_client),
         request_authentication_resources=req_auth_resources,
     )
