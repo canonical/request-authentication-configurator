@@ -152,8 +152,14 @@ def test_integration_for_oauth(  # noqa: C901
     # Act:
 
     with patch("components.oauth_integration.OAuthRequirer") as mock_oauth_requirer:
+        provider_info_mock = MagicMock()
+        provider_info_mock.issuer_url = JWT_ISSUER
+
         oauth_mock = MagicMock()
+        oauth_mock.get_provider_info.return_value = provider_info_mock
+
         mock_oauth_requirer.return_value = oauth_mock
+
         state_in = testing.State(
             config=compose_charm_configs(user_id_header_name),
             relations=compose_integrations(
@@ -163,7 +169,12 @@ def test_integration_for_oauth(  # noqa: C901
             ),
             leader=is_unit_leader,
         )
-        state_out = ctx.run(ctx.on.update_status(), state_in)
+        with ctx(ctx.on.update_status(), state_in) as mgr:
+            state_out = mgr.run()
+
+            actual_jwt_issuer = None
+            if is_oauth_integration_established:
+                actual_jwt_issuer = mgr.charm.oauth.component.jwt_issuer
 
     # Assert:
 
@@ -180,6 +191,7 @@ def test_integration_for_oauth(  # noqa: C901
     # calls to get JWT issuer:
     if is_oauth_integration_established:
         oauth_mock.get_provider_info.assert_called()
+        assert actual_jwt_issuer == JWT_ISSUER
     else:
         oauth_mock.get_provider_info.assert_not_called()
 
@@ -232,6 +244,7 @@ def test_integrations_for_request_authentication(  # noqa: C901
         "components.request_auth_integration.IstioRequestAuthRequirer"
     ) as mock_istio_request_auth_requirer:
         mock_istio_request_auth_requirer.side_effect = request_auth_requirer_factory
+
         state_in = testing.State(
             config=compose_charm_configs(user_id_header_name),
             relations=compose_integrations(
@@ -241,7 +254,6 @@ def test_integrations_for_request_authentication(  # noqa: C901
             ),
             leader=is_unit_leader,
         )
-
         with ctx(ctx.on.update_status(), state_in) as mgr:
             state_out = mgr.run()
 
