@@ -12,6 +12,7 @@ import lightkube
 import pytest
 import yaml
 from lightkube.generic_resource import create_namespaced_resource
+from lightkube.resources.core_v1 import Service
 
 from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, LOGIN_UI, POSTGRESQL, TRAEFIK
 
@@ -63,6 +64,32 @@ def juju_model_namespace(juju: jubilant.Juju) -> str:
     return juju.model.split(":")[-1] if juju.model else juju.show_model().short_name
 
 
+@pytest.fixture(scope="function")
+def jwt_issuer(
+    juju_model_namespace: str,
+    lightkube_client: lightkube.Client,
+) -> str:
+    service = lightkube_client.get(
+        Service,
+        APPLICATION_NAME_FOR_TRAEFIK,
+        namespace=juju_model_namespace,
+    )
+
+    external_ip = None
+    if service.status and service.status.loadBalancer and service.status.loadBalancer.ingress:
+        ingress = service.status.loadBalancer.ingress[0]
+        external_ip = ingress.ip or ingress.hostname
+    elif service.spec and service.spec.externalIPs:
+        external_ip = service.spec.externalIPs[0]
+
+    assert external_ip, (
+        "Unable to determine external IP for Service "
+        f"'{APPLICATION_NAME_FOR_TRAEFIK}' in namespace '{juju_model_namespace}'"
+    )
+
+    return str(external_ip)
+
+
 @pytest.fixture(scope="session")
 def lightkube_client() -> lightkube.Client:
     client = lightkube.Client()
@@ -71,6 +98,7 @@ def lightkube_client() -> lightkube.Client:
 
 def verify_request_authentication_resources_as_expected(
     expected_header_name: str,
+    expected_jwt_issuer: str,
     request_authentication_resources: list,
 ) -> None:
     """Verify the two RequestAuthentication resources are created as expected."""
@@ -85,8 +113,15 @@ def verify_request_authentication_resources_as_expected(
             f"Expected one jwtRules entry for RequestAuthentication '{req_auth_name}', "
             f"but found {len(jwt_rules)}"
         )
+        jwt_rule = jwt_rules[0]
 
-        claim_to_header_mapping = jwt_rules[0].get("outputClaimToHeaders")
+        actual_jwt_issuer = jwt_rule.get("issuer")
+        assert actual_jwt_issuer == expected_jwt_issuer, (
+            f"Unexpected JWT issuer in RequestAuthentication '{req_auth_name}': "
+            f"expected '{expected_jwt_issuer}', found '{actual_jwt_issuer}'"
+        )
+
+        claim_to_header_mapping = jwt_rule.get("outputClaimToHeaders")
         assert claim_to_header_mapping is not None, (
             "Expected one claim-to-header mapping in RequestAuthentication "
             f"'{req_auth_name}', but none was found"
@@ -263,6 +298,7 @@ def test_integrate_charm_under_test(juju: jubilant.Juju):
 
 def test_create_request_authentication_resources_after_integrations(
     juju_model_namespace: str,
+    jwt_issuer: str,
     lightkube_client: lightkube.Client,
 ):
     """Verify the expected RequestAuthentication resources are created after integrations."""
@@ -280,6 +316,7 @@ def test_create_request_authentication_resources_after_integrations(
 
     verify_request_authentication_resources_as_expected(
         expected_header_name=VALID_HEADER_NAME_BEFORE_CONFIG_CHANGE,
+        expected_jwt_issuer=jwt_issuer,
         request_authentication_resources=req_auth_resources,
     )
 
@@ -315,6 +352,7 @@ def test_update_config(juju: jubilant.Juju):
 
 def test_update_request_authentication_resources_after_config_changes(
     juju_model_namespace: str,
+    jwt_issuer: str,
     lightkube_client: lightkube.Client,
 ):
     """Verify RequestAuthentication resources are updated after config changes."""
@@ -332,5 +370,6 @@ def test_update_request_authentication_resources_after_config_changes(
 
     verify_request_authentication_resources_as_expected(
         expected_header_name=VALID_HEADER_NAME_AFTER_CONFIG_CHANGE,
+        expected_jwt_issuer=jwt_issuer,
         request_authentication_resources=req_auth_resources,
     )
