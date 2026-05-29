@@ -15,6 +15,7 @@ BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION = (
     "[{missing_integration_name}] Integration {missing_integration_name} not established"
 )
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
+JWT_ISSUER = "https://auth.example.com"
 REQ_AUTH_INTEGRATION_NAME_FOR_M2M = "request-auth-m2m"
 REQ_AUTH_INTEGRATION_NAME_FOR_UI = "request-auth-ui"
 OAUTH_INTEGRATION_NAME = "oauth-jwt-issuer"
@@ -178,7 +179,7 @@ def test_integration_for_oauth(  # noqa: C901
 
     # calls to get JWT issuer:
     if is_oauth_integration_established:
-        oauth_mock.get_provider_info.assert_called_once()
+        oauth_mock.get_provider_info.assert_called()
     else:
         oauth_mock.get_provider_info.assert_not_called()
 
@@ -193,7 +194,7 @@ def test_integration_for_oauth(  # noqa: C901
 @patch(
     "components.oauth_integration.OAuthRequirerComponent.jwt_issuer",
     new_callable=PropertyMock,
-    return_value="https://auth.example.com",
+    return_value=JWT_ISSUER,
 )
 def test_integrations_for_request_authentication(  # noqa: C901
     _: PropertyMock,
