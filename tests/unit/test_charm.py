@@ -38,7 +38,7 @@ def compose_integrations(
     if is_ui_integration_established:
         relations.append(testing.Relation(endpoint=REQ_AUTH_INTEGRATION_NAME_FOR_UI))
     if is_oauth_integration_established:
-        relations.append(testing.Relation(endpoint=REQ_AUTH_INTEGRATION_NAME_FOR_OAUTH))
+        relations.append(testing.Relation(endpoint=OAUTH_INTEGRATION_NAME))
     return relations
 
 
@@ -180,7 +180,7 @@ def test_integration_for_oauth(  # noqa: C901
     if is_oauth_integration_established:
         oauth_mock.get_provider_info.assert_called_once()
     else:
-        oauth_mock.get_provider_info.assert_not_called()    
+        oauth_mock.get_provider_info.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -237,7 +237,7 @@ def test_no_request_authentication_resources_before_integrations(
 
     assert len(req_auth_resources) == 0, (
         f"Expected no RequestAuthentication resources in namespace '{juju_model_namespace}' "
-        f"before integrations, but found: {[item.metadata.name for item in req_auth_resources]}"
+        f"before integrations, but found: {[item.metadata.name for item in req_auth_resources]}"  # pyright: ignore [reportOptionalMemberAccess] noqa: E501
     )
 
 
@@ -275,7 +275,7 @@ def test_create_request_authentication_resources_after_integrations(
 
     assert len(req_auth_resources) == 2, (
         f"Expected two RequestAuthentication resources in namespace '{juju_model_namespace}' "
-        f"after integrations, but found: {[item.metadata.name for item in req_auth_resources]}"
+        f"after integrations, but found: {[item.metadata.name for item in req_auth_resources]}"  # pyright: ignore [reportOptionalMemberAccess] noqa: E501
     )
 
     verify_request_authentication_resources_as_expected(
@@ -327,7 +327,7 @@ def test_update_request_authentication_resources_after_config_changes(
 
     assert len(req_auth_resources) == 2, (
         f"Expected two RequestAuthentication resources in namespace '{juju_model_namespace}' "
-        f"after integrations, but found: {[item.metadata.name for item in req_auth_resources]}"
+        f"after integrations, but found: {[item.metadata.name for item in req_auth_resources]}"  # pyright: ignore [reportOptionalMemberAccess] noqa: E501
     )
 
     verify_request_authentication_resources_as_expected(
