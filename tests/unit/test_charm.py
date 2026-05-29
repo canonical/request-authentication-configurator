@@ -14,7 +14,7 @@ from charm import RequestAuthenticationIntegratorCharm
 BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION = (
     "[{integration_name}] Integration {integration_name} not established"
 )
-BLOCKED_STATUS_MESSAGE_FOR_MISSING_PROVIDER_INFO = (
+BLOCKED_STATUS_MESSAGE_FOR_PROVIDER_INFO_NOT_AVAILABLE = (
     "Integration {integration_name} established but provider information"
     " (including JWT issuer) not available yet"
 )
