@@ -23,18 +23,16 @@ class RequestAuthRequirerComponent(Component):
     def __init__(
         self,
         *args,
-        claim_mapped_to_header,
-        integration_name,
-        jwt_issuer,
-        user_id_header_name,
+        claim_to_header_mapping: dict[str, str],
+        integration_name: str,
+        jwt_issuer: str,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
-        self.claim_mapped_to_header = claim_mapped_to_header
+        self.claim_to_header_mapping = claim_to_header_mapping
         self.integration_name = integration_name
         self.jwt_issuer = jwt_issuer
-        self.user_id_header_name = user_id_header_name
 
         self._events_to_observe.append(
             getattr(self._charm.on, f"{self.integration_name.replace('-', '_')}_relation_changed")
@@ -69,10 +67,8 @@ class RequestAuthRequirerComponent(Component):
             issuer=self.jwt_issuer,
             forward_original_token=True,
             claim_to_headers=[
-                ClaimToHeader(
-                    header=self.user_id_header_name,
-                    claim=self.claim_mapped_to_header,
-                )
+                ClaimToHeader(header=key, claim=value)
+                for key, value in self.claim_to_header_mapping.items()
             ],
             from_headers=[FromHeader(name=JWT_HEADER_NAME, prefix=JWT_HEADER_VALUE_PREFIX)],
         )

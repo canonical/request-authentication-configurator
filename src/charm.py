@@ -57,10 +57,9 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
             component=RequestAuthRequirerComponent(
                 charm=self,
                 name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
-                claim_mapped_to_header="sub",
+                claim_to_header_mapping={"sub": self.user_id_header_name},
                 integration_name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
                 jwt_issuer=self.oauth.component.jwt_issuer,  # pyright: ignore [reportAttributeAccessIssue] noqa: E501
-                user_id_header_name=self.user_id_header_name,
             ),
             depends_on=[self.config_validation, self.oauth],
         )
@@ -69,10 +68,9 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
             component=RequestAuthRequirerComponent(
                 charm=self,
                 name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
-                claim_mapped_to_header="email",
+                claim_to_header_mapping={"email": self.user_id_header_name},
                 integration_name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
                 jwt_issuer=self.oauth.component.jwt_issuer,  # pyright: ignore [reportAttributeAccessIssue] noqa: E501
-                user_id_header_name=self.user_id_header_name,
             ),
             depends_on=[self.config_validation, self.oauth],
         )
