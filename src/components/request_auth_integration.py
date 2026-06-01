@@ -53,7 +53,7 @@ class RequestAuthRequirerComponent(Component):
         """Validate the integration for RequestAuthentication."""
         if not self.is_integration_established:
             message = f"Integration {self.integration_name} not established"
-            logger.info(message)
+            logger.warning(message)
             return ops.BlockedStatus(message)
         return ops.ActiveStatus()
 

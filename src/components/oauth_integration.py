@@ -29,7 +29,7 @@ class OAuthRequirerComponent(Component):
         """Validate the integration for the JWT issuer."""
         if not self.is_integration_established:
             message = f"Integration {self.integration_name} not established"
-            logger.info(message)
+            logger.warning(message)
             return ops.BlockedStatus(message)
 
         if self.jwt_issuer is None:
