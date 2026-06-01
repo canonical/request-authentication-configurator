@@ -17,12 +17,17 @@ class OAuthRequirerComponent(Component):
 
         self.integration_name = integration_name
 
-        self._events_to_observe.append(
-            getattr(self._charm.on, f"{self.integration_name.replace('-', '_')}_relation_changed")
-        )
-
         self.oauth = OAuthRequirer(
             self._charm, client_config=None, relation_name=self.integration_name
+        )
+
+        self._events_to_observe.extend(
+            [
+                getattr(
+                    self._charm.on, f"{self.integration_name.replace('-', '_')}_relation_changed"
+                ),
+                self.oauth.oauth_info_changed,
+            ]
         )
 
     def get_status(self):
