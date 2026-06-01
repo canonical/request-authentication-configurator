@@ -10,7 +10,10 @@ import pytest
 from ops import testing
 
 from charm import RequestAuthenticationIntegratorCharm
+
+# isort: off
 from charms.hydra.v0.oauth import OAuthRequirer
+# isort: off
 
 BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION = (
     "[{integration_name}] Integration {integration_name} not established"
