@@ -10,6 +10,7 @@ import pytest
 from ops import testing
 
 from charm import RequestAuthenticationIntegratorCharm
+from charms.hydra.v0.oauth import OAuthRequirer
 
 BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION = (
     "[{integration_name}] Integration {integration_name} not established"
@@ -156,18 +157,14 @@ def test_integration_for_oauth(  # noqa: C901
 
     # Act:
 
-    with patch("components.oauth_integration.OAuthRequirer") as mock_oauth_requirer:
-        oauth_mock = MagicMock()
+    if is_provider_info_retrieved_successfully:
+        provider_info_mock = MagicMock()
+        provider_info_mock.issuer_url = JWT_ISSUER
+        get_provider_info_return_value = provider_info_mock
+    else:
+        get_provider_info_return_value = None
 
-        if is_provider_info_retrieved_successfully:
-            provider_info_mock = MagicMock()
-            provider_info_mock.issuer_url = JWT_ISSUER
-            oauth_mock.get_provider_info.return_value = provider_info_mock
-        else:
-            oauth_mock.get_provider_info.return_value = None
-
-        mock_oauth_requirer.return_value = oauth_mock
-
+    with patch.object(OAuthRequirer, "get_provider_info", return_value=get_provider_info_return_value) as mock_get_provider_info:
         state_in = testing.State(
             config=compose_charm_configs(user_id_header_name),
             relations=compose_integrations(
@@ -205,11 +202,11 @@ def test_integration_for_oauth(  # noqa: C901
 
     # calls to get JWT issuer:
     if is_oauth_integration_established:
-        oauth_mock.get_provider_info.assert_called()
+        mock_get_provider_info.assert_called()
         if is_provider_info_retrieved_successfully:
             assert actual_jwt_issuer == JWT_ISSUER
     else:
-        oauth_mock.get_provider_info.assert_not_called()
+        mock_get_provider_info.assert_not_called()
 
 
 @pytest.mark.parametrize(
