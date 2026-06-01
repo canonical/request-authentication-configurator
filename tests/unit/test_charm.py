@@ -164,7 +164,9 @@ def test_integration_for_oauth(  # noqa: C901
     else:
         get_provider_info_return_value = None
 
-    with patch.object(OAuthRequirer, "get_provider_info", return_value=get_provider_info_return_value) as mock_get_provider_info:
+    with patch.object(
+        OAuthRequirer, "get_provider_info", return_value=get_provider_info_return_value
+    ) as mock_get_provider_info:
         state_in = testing.State(
             config=compose_charm_configs(user_id_header_name),
             relations=compose_integrations(
