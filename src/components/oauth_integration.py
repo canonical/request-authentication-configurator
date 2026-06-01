@@ -26,7 +26,7 @@ class OAuthRequirerComponent(Component):
                 getattr(
                     self._charm.on, f"{self.integration_name.replace('-', '_')}_relation_changed"
                 ),
-                self.oauth.oauth_info_changed,
+                self.oauth.on.oauth_info_changed,
             ]
         )
 
