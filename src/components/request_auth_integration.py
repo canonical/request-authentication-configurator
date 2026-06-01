@@ -67,8 +67,8 @@ class RequestAuthRequirerComponent(Component):
             issuer=self.jwt_issuer,
             forward_original_token=True,
             claim_to_headers=[
-                ClaimToHeader(header=key, claim=value)
-                for key, value in self.claim_to_header_mapping.items()
+                ClaimToHeader(header=header, claim=claim)
+                for claim, header in self.claim_to_header_mapping.items()
             ],
             from_headers=[FromHeader(name=JWT_HEADER_NAME, prefix=JWT_HEADER_VALUE_PREFIX)],
         )
