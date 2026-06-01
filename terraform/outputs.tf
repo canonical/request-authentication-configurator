@@ -8,7 +8,7 @@ output "provides" {
 
 output "requires" {
   value = {
-    oauth = "oauth"
+    oauth            = "oauth"
     m2m_request_auth = "request-auth-m2m",
     ui_request_auth  = "request-auth-ui"
   }
