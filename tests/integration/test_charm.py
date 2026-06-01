@@ -14,7 +14,7 @@ import yaml
 from lightkube.generic_resource import create_namespaced_resource
 from lightkube.resources.core_v1 import Service
 
-from .dependency_charms import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, LOGIN_UI, POSTGRESQL, TRAEFIK
+from .charms_dependencies import HYDRA, ISTIO_INGRESS_K8S, ISTIO_K8S, LOGIN_UI, POSTGRESQL, TRAEFIK
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ INTEGRATION_ENDPOINT_FOR_DATABASE_BY_POSTGRESQL = "database"
 INTEGRATION_ENDPOINT_FOR_INGRESS_CONFIG = "istio-ingress-config"
 INTEGRATION_ENDPOINT_FOR_UI_INFO = "ui-endpoint-info"
 INTEGRATION_ENDPOINT_FOR_OAUTH_BY_HYDRA = "oauth"
-INTEGRATION_ENDPOINT_FOR_OAUTH_BY_CHARM_UNDER_TEST = "oauth-jwt-issuer"
+INTEGRATION_ENDPOINT_FOR_OAUTH_BY_CHARM_UNDER_TEST = "oauth"
 INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_INGRESS = "istio-request-auth"
 INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_CHARM_UNDER_TEST_FOR_M2M = "request-auth-m2m"
 INTEGRATION_ENDPOINT_FOR_REQUEST_AUTH_BY_CHARM_UNDER_TEST_FOR_UI = "request-auth-ui"

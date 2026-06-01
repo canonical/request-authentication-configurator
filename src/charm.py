@@ -16,7 +16,7 @@ from components.request_auth_integration import RequestAuthRequirerComponent
 logger = logging.getLogger(__name__)
 
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
-INTEGRATION_NAME_FOR_OAUTH = "oauth-jwt-issuer"
+INTEGRATION_NAME_FOR_OAUTH = "oauth"
 INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH = "request-auth-m2m"
 INTEGRATION_NAME_FOR_UI_REQUEST_AUTH = "request-auth-ui"
 

@@ -16,6 +16,7 @@ POSTGRESQL = CharmSpec(
     config={
         "plugin_btree_gin_enable": True,
         "plugin_pg_trgm_enable": True,
+        "profile": "testing",
     },
 )
 TRAEFIK = CharmSpec(charm="traefik-k8s", channel="latest/stable", trust=True)

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class OAuthRequirerComponent(Component):
     """Component to manage OAuth integration to obtain JWT issuer."""
 
-    def __init__(self, *args, integration_name, **kwargs):
+    def __init__(self, *args, integration_name: str = "oauth", **kwargs):
         super().__init__(*args, **kwargs)
 
         self.integration_name = integration_name

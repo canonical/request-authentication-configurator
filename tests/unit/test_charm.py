@@ -22,7 +22,7 @@ CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 JWT_ISSUER = "https://auth.example.com"
 REQ_AUTH_INTEGRATION_NAME_FOR_M2M = "request-auth-m2m"
 REQ_AUTH_INTEGRATION_NAME_FOR_UI = "request-auth-ui"
-OAUTH_INTEGRATION_NAME = "oauth-jwt-issuer"
+OAUTH_INTEGRATION_NAME = "oauth"
 SOME_VALID_USERID_HEADER_NAME = "kubeflow-userid"
 
 
