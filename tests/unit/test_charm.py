@@ -284,12 +284,12 @@ def test_integrations_for_request_authentication(  # noqa: C901
     elif is_ui_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
             f"[{REQ_AUTH_INTEGRATION_NAME_FOR_M2M}] Integration "
-            "{REQ_AUTH_INTEGRATION_NAME_FOR_M2M} not established"
+            f"{REQ_AUTH_INTEGRATION_NAME_FOR_M2M} not established"
         )
     else:
         assert state_out.unit_status == testing.BlockedStatus(
             f"[{REQ_AUTH_INTEGRATION_NAME_FOR_M2M}] Integration "
-            "{REQ_AUTH_INTEGRATION_NAME_FOR_M2M} not established"
+            f"{REQ_AUTH_INTEGRATION_NAME_FOR_M2M} not established"
         )
 
     # calls to update RequestAuthentication data:
