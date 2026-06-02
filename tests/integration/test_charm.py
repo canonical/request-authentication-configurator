@@ -73,7 +73,7 @@ def lightkube_client() -> lightkube.Client:
 
 
 def get_jwt_issuer(namespace: str, lightkube_client: lightkube.Client) -> str:
-    """Get the JWT issuer employed by Hydra through Traefik."""
+    """Get the identity provider's JWT issuer URL, given by Hydra and exposed through Traefik."""
     service = lightkube_client.get(
         Service,
         TRAEFIK_LOAD_BALANCER_SERVICE_NAME,
