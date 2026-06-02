@@ -260,7 +260,7 @@ def test_integrations_for_request_authentication(  # noqa: C901
         "components.request_auth_integration.IstioRequestAuthRequirer"
     ) as mock_istio_request_auth_requirer:
         mock_istio_request_auth_requirer.side_effect = (
-            lambda _, integration_name: integrations_to_mocks[integration_name]
+            lambda _, relation_name: integrations_to_mocks[relation_name]
         )
 
         state_in = testing.State(
