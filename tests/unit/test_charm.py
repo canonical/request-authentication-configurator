@@ -15,13 +15,6 @@ from charm import RequestAuthenticationIntegratorCharm
 from charms.hydra.v0.oauth import OAuthRequirer
 # isort: off
 
-BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION = (
-    "[{integration_name}] Integration {integration_name} not established"
-)
-BLOCKED_STATUS_MESSAGE_FOR_PROVIDER_INFO_NOT_AVAILABLE = (
-    "[{integration_name}] Integration {integration_name} established but provider information"
-    " (including JWT issuer) not available yet"
-)
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
 JWT_ISSUER = "https://auth.example.com"
 REQ_AUTH_INTEGRATION_NAME_FOR_M2M = "request-auth-m2m"
@@ -194,15 +187,12 @@ def test_integration_for_oauth(  # noqa: C901
             assert state_out.unit_status == testing.ActiveStatus()
         else:
             assert state_out.unit_status == testing.BlockedStatus(
-                BLOCKED_STATUS_MESSAGE_FOR_PROVIDER_INFO_NOT_AVAILABLE.format(
-                    integration_name=OAUTH_INTEGRATION_NAME
-                )
+                f"[{OAUTH_INTEGRATION_NAME}] Integration {OAUTH_INTEGRATION_NAME} established "
+                "but provider information (including JWT issuer) not available yet"
             )
     else:
         assert state_out.unit_status == testing.BlockedStatus(
-            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                integration_name=OAUTH_INTEGRATION_NAME
-            )
+            f"[{OAUTH_INTEGRATION_NAME}] Integration {OAUTH_INTEGRATION_NAME} not established"
         )
 
     # calls to get JWT issuer:
@@ -288,21 +278,18 @@ def test_integrations_for_request_authentication(  # noqa: C901
         assert state_out.unit_status == testing.ActiveStatus()
     elif is_m2m_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
-            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_UI
-            )
+            f"[{REQ_AUTH_INTEGRATION_NAME_FOR_UI}] Integration "
+            f"{REQ_AUTH_INTEGRATION_NAME_FOR_UI} not established"
         )
     elif is_ui_integration_established:
         assert state_out.unit_status == testing.BlockedStatus(
-            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
-            )
+            f"[{REQ_AUTH_INTEGRATION_NAME_FOR_M2M}] Integration "
+            "{REQ_AUTH_INTEGRATION_NAME_FOR_M2M} not established"
         )
     else:
         assert state_out.unit_status == testing.BlockedStatus(
-            BLOCKED_STATUS_MESSAGE_FOR_MISSING_INTEGRATION.format(
-                integration_name=REQ_AUTH_INTEGRATION_NAME_FOR_M2M
-            )
+            f"[{REQ_AUTH_INTEGRATION_NAME_FOR_M2M}] Integration "
+            "{REQ_AUTH_INTEGRATION_NAME_FOR_M2M} not established"
         )
 
     # calls to update RequestAuthentication data:
