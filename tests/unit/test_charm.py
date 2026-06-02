@@ -247,12 +247,10 @@ def test_integrations_for_request_authentication(  # noqa: C901
     m2m_request_auth_mock = MagicMock(name="m2m_request_auth")
     ui_request_auth_mock = MagicMock(name="ui_request_auth")
 
-    def request_auth_requirer_factory(_, relation_name: str):
-        if relation_name == REQ_AUTH_INTEGRATION_NAME_FOR_M2M:
-            return m2m_request_auth_mock
-        if relation_name == REQ_AUTH_INTEGRATION_NAME_FOR_UI:
-            return ui_request_auth_mock
-        raise AssertionError(f"Unexpected relation name: {relation_name}")
+    integrations_to_mocks = {
+        REQ_AUTH_INTEGRATION_NAME_FOR_M2M: m2m_request_auth_mock,
+        REQ_AUTH_INTEGRATION_NAME_FOR_UI: ui_request_auth_mock,
+    }
 
     ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
 
@@ -261,7 +259,9 @@ def test_integrations_for_request_authentication(  # noqa: C901
     with patch(
         "components.request_auth_integration.IstioRequestAuthRequirer"
     ) as mock_istio_request_auth_requirer:
-        mock_istio_request_auth_requirer.side_effect = request_auth_requirer_factory
+        mock_istio_request_auth_requirer.side_effect = (
+            lambda _, integration_name: integrations_to_mocks[integration_name]
+        )
 
         state_in = testing.State(
             config=compose_charm_configs(user_id_header_name),
