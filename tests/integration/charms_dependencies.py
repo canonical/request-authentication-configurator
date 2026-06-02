@@ -26,4 +26,9 @@ ISTIO_CHANNEL = "dev/edge"
 # NOTE: this is the only channel to provide the necessary "istio-request-auth" integration:
 # https://charmhub.io/istio-ingress-k8s/integrations?channel=dev/edge
 ISTIO_INGRESS_K8S = CharmSpec(charm="istio-ingress-k8s", channel=ISTIO_CHANNEL, trust=True)
-ISTIO_K8S = CharmSpec(charm="istio-k8s", channel=ISTIO_CHANNEL, trust=True, config={"platform": ""})
+ISTIO_K8S = CharmSpec(
+    charm="istio-k8s",
+    channel=ISTIO_CHANNEL,
+    trust=True,
+    config={"platform": ""},
+)
