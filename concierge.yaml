@@ -13,7 +13,7 @@ providers:
       load-balancer:
         enabled: true
         l2-mode: true
-        cidrs: 10.64.140.43/30  # NOTE: at least three IPs required for integration tests
+        cidrs: 10.64.140.43/30  # NOTE: at least three IPs required for integration tests: one for the identity provider's JWT issuer, exposed via Traefik, and one for each of the two Istio ingress gateways
     bootstrap-constraints:
       root-disk: 2G
 
