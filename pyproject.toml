@@ -74,7 +74,7 @@ optional = true
 [tool.poetry.group.unit.dependencies]
 coverage = { version = "^7.6.1", extras = ["toml"] }
 ops = { version = "^2.17.1", extras = ["testing"] }
-pytest = "^8.3.4"
+pytest = "^9.0.3"
 
 [tool.poetry.group.integration]
 optional = true
@@ -83,5 +83,5 @@ optional = true
 charmed-kubeflow-chisme = "^0.4.25"
 jubilant = "^1.9.0"
 lightkube = "^0.15.6"
-pytest = "^8.3.4"
+pytest = "^9.0.3"
 PyYAML = "^6.0.2"
