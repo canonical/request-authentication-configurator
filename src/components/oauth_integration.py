@@ -62,8 +62,3 @@ class OAuthRequirerComponent(Component):
                 return provider_info.issuer_url
 
         return None
-
-    @property
-    def ready_for_execution(self) -> bool:
-        """Return whether the component is ready for execution."""
-        return self._charm.unit.is_leader()
