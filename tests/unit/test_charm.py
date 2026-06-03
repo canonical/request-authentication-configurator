@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
 from ops import testing
 
-from charm import RequestAuthenticationIntegratorCharm
+from charm import RequestAuthenticationConfiguratorCharm
 
 # isort: off
 from charms.hydra.v0.oauth import OAuthRequirer
@@ -61,7 +61,7 @@ def test_unit_status_based_on_leadership(
     mock_config_validation_get_status.return_value = testing.ActiveStatus()
     mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
     mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
-    ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
+    ctx = testing.Context(RequestAuthenticationConfiguratorCharm, config=None)
 
     # Act:
     state_in = testing.State(
@@ -106,7 +106,7 @@ def test_unit_status_based_on_whether_config_change_valid(
     mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
     mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
     mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
-    ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
+    ctx = testing.Context(RequestAuthenticationConfiguratorCharm, config=None)
 
     # Act:
     new_charm_configs = compose_charm_configs(user_id_header_name_config_value)
@@ -149,7 +149,7 @@ def test_integration_for_oauth(  # noqa: C901
     mock_config_validation_get_status.return_value = testing.ActiveStatus()
     mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
 
-    ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
+    ctx = testing.Context(RequestAuthenticationConfiguratorCharm, config=None)
 
     # Act:
 
@@ -242,7 +242,7 @@ def test_integrations_for_request_authentication(  # noqa: C901
         REQ_AUTH_INTEGRATION_NAME_FOR_UI: ui_request_auth_mock,
     }
 
-    ctx = testing.Context(RequestAuthenticationIntegratorCharm, config=None)
+    ctx = testing.Context(RequestAuthenticationConfiguratorCharm, config=None)
 
     # Act:
 

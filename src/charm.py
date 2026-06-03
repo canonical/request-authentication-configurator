@@ -21,7 +21,7 @@ INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH = "request-auth-m2m"
 INTEGRATION_NAME_FOR_UI_REQUEST_AUTH = "request-auth-ui"
 
 
-class RequestAuthenticationIntegratorCharm(ops.CharmBase):
+class RequestAuthenticationConfiguratorCharm(ops.CharmBase):
     """Charm the application."""
 
     def __init__(self, framework: ops.Framework):
@@ -84,4 +84,4 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main(RequestAuthenticationIntegratorCharm)
+    ops.main(RequestAuthenticationConfiguratorCharm)
