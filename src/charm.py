@@ -10,10 +10,15 @@ import ops
 from charmed_kubeflow_chisme.components import CharmReconciler, LeadershipGateComponent
 
 from components.config_validation import ConfigValidationComponent
+from components.oauth_integration import OAuthRequirerComponent
+from components.request_auth_integration import RequestAuthRequirerComponent
 
 logger = logging.getLogger(__name__)
 
 CONFIG_KEY_FOR_USER_ID_HEADER_NAME = "user-id-header-name"
+INTEGRATION_NAME_FOR_OAUTH = "oauth"
+INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH = "request-auth-m2m"
+INTEGRATION_NAME_FOR_UI_REQUEST_AUTH = "request-auth-ui"
 
 
 class RequestAuthenticationIntegratorCharm(ops.CharmBase):
@@ -34,8 +39,40 @@ class RequestAuthenticationIntegratorCharm(ops.CharmBase):
                 charm=self,
                 name="config-validation",
                 config_key_for_user_id_header_name=CONFIG_KEY_FOR_USER_ID_HEADER_NAME,
+                user_id_header_name=self.user_id_header_name,
             ),
             depends_on=[self.leadership_gate],
+        )
+
+        self.oauth = self.charm_reconciler.add(
+            component=OAuthRequirerComponent(
+                charm=self,
+                name=INTEGRATION_NAME_FOR_OAUTH,
+                integration_name=INTEGRATION_NAME_FOR_OAUTH,
+            ),
+            depends_on=[self.leadership_gate],
+        )
+
+        self.m2m_request_auth = self.charm_reconciler.add(
+            component=RequestAuthRequirerComponent(
+                charm=self,
+                name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
+                claim_to_header_mapping={"sub": self.user_id_header_name},
+                integration_name=INTEGRATION_NAME_FOR_M2M_REQUEST_AUTH,
+                jwt_issuer=self.oauth.component.jwt_issuer,  # pyright: ignore [reportAttributeAccessIssue] noqa: E501
+            ),
+            depends_on=[self.config_validation, self.oauth],
+        )
+
+        self.ui_request_auth = self.charm_reconciler.add(
+            component=RequestAuthRequirerComponent(
+                charm=self,
+                name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
+                claim_to_header_mapping={"email": self.user_id_header_name},
+                integration_name=INTEGRATION_NAME_FOR_UI_REQUEST_AUTH,
+                jwt_issuer=self.oauth.component.jwt_issuer,  # pyright: ignore [reportAttributeAccessIssue] noqa: E501
+            ),
+            depends_on=[self.config_validation, self.oauth],
         )
 
         self.charm_reconciler.install_default_event_handlers()

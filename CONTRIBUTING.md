@@ -40,7 +40,7 @@ charmcraft pack
 
 `tox` is the only tool required locally, as `tox` internally installs and uses `poetry`, be it to manage Python dependencies or to run `tox` environments. To install it: `pipx install tox`.
 
-Optionally, `poerty` can be additionally installed independently just for the sake of running Python commands locally outside of `tox` during debugging/development. To install it: `pipx install poetry`.
+Optionally, `poetry` can be additionally installed independently just for the sake of running Python commands locally outside of `tox` during debugging/development. To install it: `pipx install poetry`.
 
 
 ### Updating Dependencies
@@ -53,7 +53,7 @@ To add/update/remove any dependencies and/or to upgrade Python, simply:
 
 2. run `tox -e update-requirements` to update the lock file
 
-    by this point, `poerty`, through `tox`, will let you know if there are any dependency conflicts to solve.
+    by this point, `poetry`, through `tox`, will let you know if there are any dependency conflicts to solve.
 
 3. optionally, if you also want to update your local environment for running Python commands/scripts yourself and not through tox, see [Running Python Environments](#running-python-environments) below
 
