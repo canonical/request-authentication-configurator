@@ -156,14 +156,14 @@ jobs:
           # Pass the path where the charm artefact is downloaded to the tox command
           # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@24.04-amd64.charm
           # We need to find a better way to dynamically get this value
-          export CHARM_PATH=${{ github.workspace }}/request-authentication-integrator_ubuntu@24.04-amd64.charm
+          export CHARM_PATH=${{ github.workspace }}/request-authentication-configurator_ubuntu@24.04-amd64.charm
           tox -vve integration
 
       - name: Get juju status
         run: juju status --integrations
 
       - name: Get charm logs
-        run: kubectl logs --tail 100 -n testing -l app.kubernetes.io/name=request-authentication-integrator -c charm
+        run: kubectl logs --tail 100 -n testing -l app.kubernetes.io/name=request-authentication-configurator -c charm
         if: failure()
 
       - name: Collect charm debug artifacts

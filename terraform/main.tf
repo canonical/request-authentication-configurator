@@ -1,6 +1,6 @@
-resource "juju_application" "request_authentication_integrator" {
+resource "juju_application" "request_authentication_configurator" {
   charm {
-    name     = "request-authentication-integrator"
+    name     = "request-authentication-configurator"
     base     = var.base
     channel  = var.channel
     revision = var.revision

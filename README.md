@@ -8,12 +8,12 @@ Avoid using this README file for information that is maintained or published els
 Use links instead.
 -->
 
-# request-authentication-integrator
+# request-authentication-configurator
 
-Charmhub package name: request-authentication-integrator
-More information: https://charmhub.io/request-authentication-integrator
+Charmhub package name: request-authentication-configurator
+More information: https://charmhub.io/request-authentication-configurator
 
-A charm integrator to have `RequestAuthentication.security.istio.io` custom resources created.
+A charm configurator to have `RequestAuthentication.security.istio.io` custom resources created.
 
 ## Other resources
 

@@ -1,8 +1,8 @@
-name: request-authentication-integrator
-title: RequestAuthentication Integrator
-summary: A charm integrator to have `RequestAuthentication.security.istio.io` custom resources created
+name: request-authentication-configurator
+title: RequestAuthentication Configurator
+summary: A charm configurator to have `RequestAuthentication.security.istio.io` custom resources created
 description: |
-  A charm integrator to have `RequestAuthentication.security.istio.io` custom resources created.
+  A charm configurator to have `RequestAuthentication.security.istio.io` custom resources created.
 
   This charm exposes a config option to define the desired claim-to-header mapping for JWT tokens
   validated by `RequestAuthentication`s, integrates with Hydra to obtain the JWT issuer of employed

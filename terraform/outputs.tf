@@ -1,5 +1,5 @@
 output "app_name" {
-  value = juju_application.request_authentication_integrator.name
+  value = juju_application.request_authentication_configurator.name
 }
 
 output "provides" {
