@@ -10,6 +10,9 @@ jobs:
   ci-tests:
     uses: ./.github/workflows/ci.yaml
     secrets: inherit
+    permissions:
+      actions: read  # Needed for the nested build job in ci.yaml
+      contents: read
 
   release:
     strategy:
