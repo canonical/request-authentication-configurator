@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/ci.yaml
     secrets: inherit
     permissions:
-      actions: read  # Needed for the nested build/release jobs in ci.yaml
+      actions: read  # Needed for the nested build job in ci.yaml
       contents: read
 
   release:
