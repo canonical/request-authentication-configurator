@@ -95,7 +95,7 @@ jobs:
       contents: read
     with:
       path-to-charm-directory: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths)[0] }}
-      cache: false  # TODO: re-enable CCC once charm registered and added to CCC
+      cache: true
 
   release:
     name: Release charm to Charmhub branch
