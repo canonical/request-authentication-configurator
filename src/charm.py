@@ -79,8 +79,12 @@ class RequestAuthenticationConfiguratorCharm(ops.CharmBase):
 
     @property
     def user_id_header_name(self) -> str:
-        """Get the user ID header name from the respective charm config."""
-        return str(self.model.config[CONFIG_KEY_FOR_USER_ID_HEADER_NAME])
+        """Get the user ID header name from the respective charm config.
+
+        Returns an empty string when the config option is not set, as it has no default value.
+        """
+        value = self.model.config.get(CONFIG_KEY_FOR_USER_ID_HEADER_NAME)
+        return str(value) if value is not None else ""
 
 
 if __name__ == "__main__":  # pragma: nocover
