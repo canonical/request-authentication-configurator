@@ -134,7 +134,7 @@ def test_unit_status_when_config_missing(
     mock_leadership_gate_get_status: MagicMock,
     config,
 ):
-    """Test that the charm is blocked when the required config is unset (it has no default)."""
+    """Test the charm is blocked when the required config is unset or empty (it has no default)."""
     # Arrange:
     mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
     mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
