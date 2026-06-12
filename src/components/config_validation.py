@@ -10,7 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigValidationComponent(Component):
-    """Component to manage config-changed events."""
+    """Component to manage config-changed events.
+
+    Validates the user-ID header name config. As this config has no default value, the component
+    reports a BlockedStatus when it is unset and when it is set to an invalid HTTP header field
+    name, and an ActiveStatus when it holds a valid value.
+    """
 
     def __init__(self, *args, config_key_for_user_id_header_name, user_id_header_name, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,7 +51,16 @@ class ConfigValidationComponent(Component):
         return self._charm.unit.is_leader()
 
     def get_status(self):
-        """Validate the provided config value for the user-ID header name."""
+        """Validate the provided config value for the user-ID header name.
+
+        Returns a BlockedStatus if the config is unset (no default value) or set to an invalid
+        HTTP header field name, and an ActiveStatus otherwise.
+        """
+        if not self.user_id_header_name:
+            return ops.BlockedStatus(
+                f"missing required config: '{self.config_key_for_user_id_header_name}'"
+            )
+
         message = (
             f"'{self.config_key_for_user_id_header_name}' config value: "
             f"'{self.user_id_header_name}'"

@@ -8,4 +8,7 @@ options:
       Any argument that can be used as value for the `header` key in `outputClaimToHeaders` of
       `RequestAuthentication` — that is any valid HTTP header field name — is acceptable:
       https://istio.io/latest/docs/reference/config/security/request_authentication/#JWTRule-output_claim_to_headers
+
+      This option is required and has no default. The charm will be in a blocked state until it is
+      set to a valid HTTP header field name.
     type: string

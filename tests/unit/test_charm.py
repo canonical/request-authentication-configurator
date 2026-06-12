@@ -83,7 +83,6 @@ def test_unit_status_based_on_leadership(
     [
         (SOME_VALID_USERID_HEADER_NAME, True),
         ("mlflow-userid", True),
-        ("", False),
         ("invalid:", False),
         ("not a valid one", False),
         ("kubeflow:userid", False),
@@ -121,6 +120,35 @@ def test_unit_status_based_on_whether_config_change_valid(
             f"[config-validation] invalid config change, '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}' "
             f"config value: '{user_id_header_name_config_value}'"
         )
+
+
+@pytest.mark.parametrize("config", [{}, {CONFIG_KEY_FOR_USER_ID_HEADER_NAME: ""}])
+@patch("charmed_kubeflow_chisme.components.LeadershipGateComponent.get_status")
+@patch("components.oauth_integration.OAuthRequirerComponent.get_status")
+@patch("components.request_auth_integration.RequestAuthRequirerComponent.get_status")
+@patch("components.request_auth_integration.RequestAuthRequirerComponent._configure_app_leader")
+def test_unit_status_when_config_missing(
+    _: MagicMock,
+    mock_request_auth_integration_get_status: MagicMock,
+    mock_oauth_integration_get_status: MagicMock,
+    mock_leadership_gate_get_status: MagicMock,
+    config,
+):
+    """Test the charm is blocked when the required config is unset or empty (it has no default)."""
+    # Arrange:
+    mock_leadership_gate_get_status.return_value = testing.ActiveStatus()
+    mock_oauth_integration_get_status.return_value = testing.ActiveStatus()
+    mock_request_auth_integration_get_status.return_value = testing.ActiveStatus()
+    ctx = testing.Context(RequestAuthenticationConfiguratorCharm, config=None)
+
+    # Act:
+    state_in = testing.State(config=config)
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+
+    # Assert:
+    assert state_out.unit_status == testing.BlockedStatus(
+        f"[config-validation] missing required config: '{CONFIG_KEY_FOR_USER_ID_HEADER_NAME}'"
+    )
 
 
 @pytest.mark.parametrize(
