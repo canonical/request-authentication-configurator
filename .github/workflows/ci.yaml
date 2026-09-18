@@ -89,7 +89,7 @@ jobs:
     name: Build charm
     needs:
       - get-charm-paths-track
-    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v51.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v53.0.0
     permissions:
       actions: read
       contents: read
@@ -103,7 +103,7 @@ jobs:
     needs:
       - get-charm-paths-track
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm_pr.yaml@v51.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm_pr.yaml@v53.0.0
     permissions:
       actions: read
       contents: read
